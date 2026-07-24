@@ -38,7 +38,9 @@ export function difficultyAt(elapsed: number, score: number): Difficulty {
     t,
     threatInterval: lerp(THREAT.intervalAtCalm, THREAT.intervalAtFurious, t),
     telegraphScale: lerp(1, THREAT.telegraphSqueeze, t),
-    maxThreats: t < 0.35 ? 1 : t < 0.75 ? 2 : 3,
+    // Peaks at two simultaneous threats — three at once made max difficulty
+    // read as overwhelming rather than hard.
+    maxThreats: t < 0.45 ? 1 : 2,
     itemWeights: {
       // Light, cheap items thin out; heavy, valuable ones take over.
       glass: lerp(10, 4, t),

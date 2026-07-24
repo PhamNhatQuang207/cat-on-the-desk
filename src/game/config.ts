@@ -12,10 +12,11 @@ export const VIEW = {
 } as const;
 
 export const DESK = {
-  /** The doom edge. Items past this point tip and fall. */
+  /** The left doom edge. Items past this point tip and fall. */
   edgeX: 150,
-  /** Right end of the walkable surface (the owner sits beyond it). */
-  rightX: 830,
+  /** The right doom edge — items past this fall too. The owner stands beyond
+      it, off the desk, reaching in across the drop. */
+  rightEdgeX: 810,
   /** y of the desk surface — everything on the desk rests on this line. */
   surfaceY: 372,
   thickness: 26,
@@ -25,9 +26,9 @@ export const CAT = {
   width: 84,
   height: 58,
   speed: 250,
-  /** Where the cat can stand, measured from the desk edge/right end. */
+  /** Where the cat can stand — up to each doom edge, but not off it. */
   minX: DESK.edgeX + 26,
-  maxX: DESK.rightX - 40,
+  maxX: DESK.rightEdgeX - 26,
   startX: 470,
 
   swipeDuration: 0.26,
@@ -83,9 +84,10 @@ export const SPAWN = {
   targetItems: 5,
   maxItems: 7,
   interval: 1.6,
-  /** New items appear on the owner's half so they must be walked over. */
-  minX: DESK.edgeX + 210,
-  maxX: DESK.rightX - 60,
+  /** New items appear in the middle band, clear of both doom edges, so the
+      cat has to nudge them toward whichever edge it fancies. */
+  minX: DESK.edgeX + 150,
+  maxX: DESK.rightEdgeX - 150,
   /** Minimum gap between item centers when placing. */
   minGap: 62,
 } as const;
@@ -120,8 +122,9 @@ export const THREAT = {
   spray: {
     /** Reticle tracks the cat for this long, then locks. */
     trackTime: 0.55,
-    /** Locked-on delay before firing — the dodge window. */
-    lockTime: 0.45,
+    /** Locked-on delay before firing — the dodge window. Kept generous so the
+        spray always reads as telegraphed rather than a snap shot. */
+    lockTime: 0.7,
     activeTime: 0.35,
     recoverTime: 0.45,
     /** Half-width of the spray cone at the desk surface. */
@@ -140,9 +143,10 @@ export const THREAT = {
   },
   /** Seconds between threats at aggro 0 and aggro 1. */
   intervalAtCalm: 4.2,
-  intervalAtFurious: 1.25,
-  /** Telegraph durations are scaled by this factor at maximum aggro. */
-  telegraphSqueeze: 0.55,
+  intervalAtFurious: 1.85,
+  /** Telegraph durations are scaled by this factor at maximum aggro. Kept from
+      squeezing too far so late-game threats stay readable and dodgeable. */
+  telegraphSqueeze: 0.72,
 } as const;
 
 export const DIFFICULTY = {

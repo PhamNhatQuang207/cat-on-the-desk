@@ -140,7 +140,7 @@ describe('movement', () => {
     expect(state.cat.x).toBeCloseTo(CAT.minX, 0);
   });
 
-  it('cannot walk off the owner end of the desk', () => {
+  it('cannot walk off the right edge of the desk', () => {
     const { state, input } = startedGame();
     input.hold('right');
     run(state, input, 4);
@@ -182,6 +182,30 @@ describe('the core loop: swipe an item off the desk', () => {
     expect(state.destroyed).toBe(1);
     expect(state.score).toBeGreaterThan(0);
     expect(state.items.some((i) => i.id === mug.id)).toBe(false);
+  });
+
+  it('scores a mug knocked off the right edge too', () => {
+    const { state, input } = startedGame();
+    const mug = onlyItem(state, 'mug', DESK.rightEdgeX - 200);
+    state.cat.x = mug.x - 70;
+
+    // Face right, standing just left of the mug, then swipe it toward the
+    // right-hand drop — the mirror image of the left-edge case above.
+    input.hold('right');
+    run(state, input, 0.2);
+    input.release('right');
+    expect(state.cat.facing).toBe(1);
+
+    let swipes = 0;
+    while (state.destroyed === 0 && swipes < 15) {
+      input.tap('swipe');
+      run(state, input, 0.5);
+      swipes++;
+    }
+
+    expect(state.destroyed).toBe(1);
+    expect(state.score).toBeGreaterThan(0);
+    expect(mug.x).toBeGreaterThan(DESK.rightEdgeX);
   });
 
   it('needs more swipes for a monitor than for a glass', () => {
@@ -253,7 +277,7 @@ describe('the desk stays stocked', () => {
     expect(state.items.length).toBeGreaterThan(1);
     for (const item of state.items) {
       expect(item.x).toBeGreaterThan(DESK.edgeX);
-      expect(item.x).toBeLessThan(DESK.rightX);
+      expect(item.x).toBeLessThan(DESK.rightEdgeX);
     }
   });
 

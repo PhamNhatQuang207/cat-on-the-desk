@@ -3,7 +3,7 @@
 import { sfx } from '../engine/audio.ts';
 import type { InputSource } from '../engine/input.ts';
 import { Rng } from '../engine/rng.ts';
-import { COLORS, DESK, FX, ITEM_SPECS, OWNER, PHYSICS } from './config.ts';
+import { COLORS, DESK, FX, ITEM_SPECS, OWNER, PHYSICS, VIEW } from './config.ts';
 import { updateCat } from './entities/cat.ts';
 import { addAggro, updateOwner } from './entities/owner.ts';
 import { updateThreats } from './entities/threats.ts';
@@ -113,8 +113,10 @@ function onSmashed(state: GameState, item: Item): void {
   const multText =
     stareMult > 1.05 ? `  👁️ x${stareMult.toFixed(1)}` : state.combo > 1 ? `  x${comboMultiplier(state.combo)}` : '';
 
+  // Show the payoff where the item actually went over, clamped on-screen.
+  const fx = Math.max(60, Math.min(VIEW.width - 60, item.x));
   state.floaters.push({
-    x: DESK.edgeX + 40,
+    x: fx,
     y: DESK.surfaceY + 70,
     text: `${label} +${points}${multText}`,
     color: stareMult > 1.05 ? COLORS.warn : COLORS.good,
@@ -122,15 +124,15 @@ function onSmashed(state: GameState, item: Item): void {
     scale: 1 + Math.min(0.6, points / 900),
   });
 
-  emitShards(state, item);
+  emitShards(state, fx, item.fragile);
 }
 
-function emitShards(state: GameState, item: Item): void {
-  const count = item.fragile ? 14 : 8;
-  const color = item.fragile ? '#cfe8ff' : '#8a7f9c';
+function emitShards(state: GameState, atX: number, fragile: boolean): void {
+  const count = fragile ? 14 : 8;
+  const color = fragile ? '#cfe8ff' : '#8a7f9c';
   for (let i = 0; i < count; i++) {
     state.shards.push({
-      x: DESK.edgeX + rng.range(-30, 40),
+      x: atX + rng.range(-30, 40),
       y: PHYSICS.floorY - 6,
       vx: rng.range(-220, 260),
       vy: rng.range(-420, -120),

@@ -35,13 +35,13 @@ describe('stepItem', () => {
     expect(item.phase).toBe('destroyed');
   });
 
-  it('stops an item at the far wall instead of letting it escape', () => {
-    const item = createItem(1, 'mug', DESK.rightX - 60);
-    item.vx = 900;
-    simulate(item, 2);
+  it('tips then smashes an item pushed off the right edge', () => {
+    const item = createItem(1, 'mug', DESK.rightEdgeX - 20);
+    item.vx = 400;
+    const events = simulate(item, 4);
 
-    expect(item.x).toBeLessThanOrEqual(DESK.rightX);
-    expect(item.phase).toBe('resting');
+    expect(events).toEqual(['tipped', 'smashed']);
+    expect(item.phase).toBe('destroyed');
   });
 
   it('accelerates downward once airborne', () => {
@@ -110,7 +110,15 @@ describe('edge predicates', () => {
   });
 
   it('reports zero risk for a safe item', () => {
-    expect(riskLevel(createItem(1, 'mug', 600))).toBe(0);
+    expect(riskLevel(createItem(1, 'mug', 500))).toBe(0);
+  });
+
+  it('treats the right edge as a doom edge too', () => {
+    const item = createItem(1, 'mug', DESK.rightEdgeX - 2);
+    expect(hasTippedOver(item)).toBe(false);
+    expect(riskLevel(item)).toBeGreaterThan(0);
+    item.x = DESK.rightEdgeX + 1;
+    expect(hasTippedOver(item)).toBe(true);
   });
 });
 

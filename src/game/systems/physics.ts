@@ -12,22 +12,25 @@ export function applySwipe(item: Item, direction: -1 | 1, strength = PHYSICS.swi
 }
 
 /**
- * True once the item's center has cleared the desk edge — the moment gravity
- * takes over. Using the center (not the near corner) is what makes an item
- * teeter on the brink instead of dropping the instant it overhangs.
+ * True once the item's center has cleared either desk edge — the moment
+ * gravity takes over. Using the center (not the near corner) is what makes an
+ * item teeter on the brink instead of dropping the instant it overhangs.
  */
-export function hasTippedOver(item: Item, edgeX = DESK.edgeX): boolean {
-  return item.x < edgeX;
+export function hasTippedOver(item: Item): boolean {
+  return item.x < DESK.edgeX || item.x > DESK.rightEdgeX;
 }
 
-/** True while the item overhangs the edge at all — used for "at risk" cues. */
-export function isTeetering(item: Item, edgeX = DESK.edgeX): boolean {
-  return item.phase === 'resting' && item.x - item.width / 2 < edgeX;
+/** True while the item overhangs either edge at all — used for "at risk" cues. */
+export function isTeetering(item: Item): boolean {
+  if (item.phase !== 'resting') return false;
+  return item.x - item.width / 2 < DESK.edgeX || item.x + item.width / 2 > DESK.rightEdgeX;
 }
 
-/** How close to doom, 0 (safe) .. 1 (about to go over). */
-export function riskLevel(item: Item, edgeX = DESK.edgeX): number {
-  const overhang = edgeX - (item.x - item.width / 2);
+/** How close to doom, 0 (safe) .. 1 (about to go over), whichever edge is nearer. */
+export function riskLevel(item: Item): number {
+  const leftOverhang = DESK.edgeX - (item.x - item.width / 2);
+  const rightOverhang = item.x + item.width / 2 - DESK.rightEdgeX;
+  const overhang = Math.max(leftOverhang, rightOverhang);
   if (overhang <= 0) return 0;
   return Math.min(1, overhang / item.width);
 }
@@ -50,18 +53,11 @@ export function stepItem(item: Item, dt: number): 'tipped' | 'smashed' | null {
     else item.vx -= Math.sign(item.vx) * drag;
     if (Math.abs(item.vx) < PHYSICS.restSpeed) item.vx = 0;
 
-    // The far end of the desk is a wall (the owner's monitor stand, say).
-    const maxX = DESK.rightX - item.width / 2;
-    if (item.x > maxX) {
-      item.x = maxX;
-      item.vx = Math.min(0, item.vx);
-    }
-
     if (hasTippedOver(item)) {
       item.phase = 'tipping';
       item.vy = 0;
-      // Tip in the direction of travel so it pitches off the edge naturally.
-      item.spin = (item.vx < 0 ? -1 : 1) * 3.2 - 1.6;
+      // Pitch off whichever edge it cleared so it tumbles outward naturally.
+      item.spin = (item.x < DESK.edgeX ? -1 : 1) * 3.2;
       return 'tipped';
     }
     return null;
@@ -85,7 +81,7 @@ export function stepItem(item: Item, dt: number): 'tipped' | 'smashed' | null {
 
 /** Keeps a value inside the visible play area. */
 export function clampToDesk(x: number, halfWidth = 0): number {
-  return Math.max(DESK.edgeX + halfWidth, Math.min(DESK.rightX - halfWidth, x));
+  return Math.max(DESK.edgeX + halfWidth, Math.min(DESK.rightEdgeX - halfWidth, x));
 }
 
 export function clampToView(x: number): number {

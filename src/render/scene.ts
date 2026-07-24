@@ -28,30 +28,38 @@ export function drawRoom(ctx: Ctx): void {
 }
 
 export function drawDesk(ctx: Ctx): void {
-  const { edgeX, rightX, surfaceY, thickness } = DESK;
+  const { edgeX, rightEdgeX, surfaceY, thickness } = DESK;
+  const width = rightEdgeX - edgeX;
 
   // Desk top.
   ctx.fillStyle = COLORS.deskTop;
-  ctx.fillRect(edgeX, surfaceY, rightX + 130 - edgeX, thickness);
+  ctx.fillRect(edgeX, surfaceY, width, thickness);
   // Front face, slightly darker.
   ctx.fillStyle = COLORS.deskFace;
-  ctx.fillRect(edgeX, surfaceY + thickness, rightX + 130 - edgeX, 14);
-  // Legs.
+  ctx.fillRect(edgeX, surfaceY + thickness, width, 14);
+  // Legs, inset from each edge.
   ctx.fillRect(edgeX + 22, surfaceY + thickness, 20, 150);
-  ctx.fillRect(rightX - 40, surfaceY + thickness, 20, 150);
+  ctx.fillRect(rightEdgeX - 42, surfaceY + thickness, 20, 150);
 
-  // The edge itself gets a warning glow — this is where the fun happens.
-  const glow = ctx.createLinearGradient(edgeX, 0, edgeX + 46, 0);
+  // Both edges get a warning glow — this is where the fun happens.
+  drawEdgeGlow(ctx, edgeX, 1);
+  drawEdgeGlow(ctx, rightEdgeX, -1);
+}
+
+/** A warning glow and bright lip on one doom edge; dir points onto the desk. */
+function drawEdgeGlow(ctx: Ctx, x: number, dir: 1 | -1): void {
+  const { surfaceY, thickness } = DESK;
+  const glow = ctx.createLinearGradient(x, 0, x + dir * 46, 0);
   glow.addColorStop(0, 'rgba(255, 202, 107, 0.5)');
   glow.addColorStop(1, 'rgba(255, 202, 107, 0)');
   ctx.fillStyle = glow;
-  ctx.fillRect(edgeX, surfaceY - 60, 46, 60 + thickness);
+  ctx.fillRect(dir === 1 ? x : x - 46, surfaceY - 60, 46, 60 + thickness);
 
   ctx.strokeStyle = COLORS.deskEdgeGlow;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(edgeX, surfaceY - 8);
-  ctx.lineTo(edgeX, surfaceY + thickness + 14);
+  ctx.moveTo(x, surfaceY - 8);
+  ctx.lineTo(x, surfaceY + thickness + 14);
   ctx.stroke();
 }
 
@@ -187,7 +195,9 @@ export function drawDebris(ctx: Ctx, destroyed: number): void {
     // Deterministic scatter so the pile doesn't shimmer between frames.
     const seed = Math.sin(i * 78.233) * 43758.5453;
     const frac = seed - Math.floor(seed);
-    const x = DESK.edgeX - 60 + frac * 190;
+    // Wreckage piles up under both edges now that either can be a drop.
+    const base = i % 2 === 0 ? DESK.edgeX - 60 : DESK.rightEdgeX - 20;
+    const x = base + frac * 120;
     const y = PHYSICS.floorY - 4 - (i % 3) * 5;
     ellipse(ctx, x, y, 7 + frac * 6, 3.5, i % 2 === 0 ? '#cfe8ff' : '#8a7f9c');
   }

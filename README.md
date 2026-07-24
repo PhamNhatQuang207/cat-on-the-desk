@@ -3,9 +3,11 @@
 You are a cat. There is a desk. On the desk are expensive, fragile things.
 Your owner would very much like them to stay there.
 
-An endless arcade browser game. Push everything off the edge, hold eye contact
-with your owner while you do it, and dodge the spray bottle for as long as you
-can manage.
+An endless arcade browser game. The desk drops away on **both** sides — shove
+everything off whichever edge is closer, hold eye contact with your owner while
+you do it, and dodge the spray bottle for as long as you can manage.
+
+▶ **Play it live:** https://phamnhatquang207.github.io/cat-on-the-desk/
 
 ## Play
 
@@ -18,13 +20,17 @@ npm run dev      # http://localhost:5173
 
 | Key | Action |
 | --- | --- |
-| `←` `→` / `A` `D` | Prowl along the desk |
+| `←` `→` / `A` `D` | Prowl along the desk (and pick which edge to push toward) |
 | `Space` | Paw swipe — heavy things need several |
 | `Shift` (hold) | Hold eye contact: builds up to a **x3** multiplier, but you cannot move |
 | `P` / `Esc` | Pause |
+| `Enter` / `Space` | Start / restart from the title and game-over screens |
 
 ## How it works
 
+- **Two doom edges.** The desk drops off on the left *and* the right. Items
+  spawn in the middle; you pick which way to send them. Once an item's centre
+  clears either edge it tips, falls, and smashes for its value.
 - **Mass is the difficulty.** A water glass skitters off with one swipe; a
   monitor has to be walked to the edge over many. Heavy items are worth far
   more, so the greedy play is also the slow, exposed one.
@@ -38,8 +44,9 @@ npm run dev      # http://localhost:5173
   nudged closest to the brink. Both are telegraphed, and both are always
   dodgeable if you move during the telegraph. Three hits and you're off the desk.
 - **It never stops getting harder.** Threats come faster, telegraphs get
-  shorter, and the item mix shifts toward the heavy expensive stuff, driven by
-  both elapsed time and score.
+  shorter, and the item mix shifts toward the heavy expensive stuff. The ramp is
+  driven by **both elapsed time and score** (`elapsed / 150s + score / 12000`,
+  clamped to 1), so a fast scorer is pushed as hard as a slow survivor.
 
 High score is kept in `localStorage`.
 
@@ -50,6 +57,9 @@ npm test         # Vitest: physics, scoring, difficulty, and full-run integratio
 npm run typecheck
 npm run build && npm run preview
 ```
+
+All gameplay tuning lives in one place — `src/game/config.ts`. If something
+feels wrong while playing, change it there; nothing else holds a magic number.
 
 ## Layout
 
@@ -65,8 +75,12 @@ src/
 ```
 
 There are no image or audio assets: every sprite is drawn with Canvas 2D paths
-and every sound is synthesized with WebAudio at runtime.
-
-Gameplay tuning lives entirely in `src/game/config.ts`. The systems under
+and every sound is synthesized with WebAudio at runtime. The systems under
 `src/game/systems/` are pure functions, which is why the test suite can drive a
 complete 3-minute run headlessly.
+
+## Deploy
+
+Pushing to `main` triggers `.github/workflows/deploy.yml`, which typechecks,
+runs the tests, builds, and publishes `dist/` to GitHub Pages. A broken commit
+never reaches the live site because the deploy is gated on those checks.
