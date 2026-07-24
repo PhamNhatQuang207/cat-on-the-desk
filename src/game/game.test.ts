@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { Action, InputSource } from '../engine/input.ts';
-import { CAT, DESK, OWNER } from './config.ts';
+import { CAT, CAT_BREED_ORDER, DESK, OWNER } from './config.ts';
 import { createItem } from './entities/item.ts';
 import { updateGame } from './game.ts';
 import { createGameState } from './state.ts';
@@ -127,6 +127,43 @@ describe('phase transitions', () => {
     expect(state.phase).toBe('playing');
     expect(state.strikes).toBe(0);
     expect(state.score).toBe(0);
+  });
+});
+
+describe('cat selection', () => {
+  it('cycles breeds on the title screen with left/right, wrapping at the ends', () => {
+    const state = createGameState();
+    const input = new FakeInput();
+    expect(state.selectedBreed).toBe(CAT_BREED_ORDER[0]);
+
+    input.tap('right');
+    updateGame(state, input, STEP);
+    expect(state.selectedBreed).toBe(CAT_BREED_ORDER[1]);
+
+    input.tap('left');
+    updateGame(state, input, STEP);
+    expect(state.selectedBreed).toBe(CAT_BREED_ORDER[0]);
+
+    // Wraps to the last breed going left from the first.
+    input.tap('left');
+    updateGame(state, input, STEP);
+    expect(state.selectedBreed).toBe(CAT_BREED_ORDER[CAT_BREED_ORDER.length - 1]);
+  });
+
+  it('starts a run with the breed selected on the title screen', () => {
+    const state = createGameState();
+    const input = new FakeInput();
+
+    input.tap('right');
+    updateGame(state, input, STEP);
+    input.tap('right');
+    updateGame(state, input, STEP);
+    expect(state.selectedBreed).toBe(CAT_BREED_ORDER[2]);
+
+    input.tap('swipe');
+    updateGame(state, input, STEP);
+    expect(state.phase).toBe('playing');
+    expect(state.cat.breed).toBe(CAT_BREED_ORDER[2]);
   });
 });
 

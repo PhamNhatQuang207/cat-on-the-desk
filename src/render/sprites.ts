@@ -1,6 +1,6 @@
 /** Every sprite is drawn with canvas paths — no image assets anywhere. */
 
-import { CAT, COLORS, DESK, type ItemKind } from '../game/config.ts';
+import { CAT, CAT_BREEDS, COLORS, DESK, type CatBreedSpec, type ItemKind } from '../game/config.ts';
 import type { Cat, Item, Owner } from '../game/types.ts';
 import { contactShadow, ellipse, fillRoundRect, roundRect, type Ctx } from './draw.ts';
 
@@ -154,8 +154,13 @@ export function drawCat(ctx: Ctx, cat: Cat, pawX: number, aggroGlow: number): vo
   const w = CAT.width;
   const h = CAT.height;
   const y = DESK.surfaceY;
+  const spec = CAT_BREEDS[cat.breed];
   const stunned = cat.stunTimer > 0;
   const bobY = stunned ? 4 : Math.sin(cat.bob) * 2;
+  // Siamese "points" — ears, legs, and tail tip carry the dark pattern color
+  // instead of the pale body fur. Everyone else's legs just shade darker.
+  const pointed = spec.pattern === 'pointed';
+  const legColor = pointed ? spec.patternColor : spec.furDark;
 
   ctx.save();
   ctx.translate(cat.x, y + bobY);
@@ -165,51 +170,66 @@ export function drawCat(ctx: Ctx, cat: Cat, pawX: number, aggroGlow: number): vo
   ctx.scale(cat.facing, 1);
 
   // Tail, out behind — lashes faster the angrier the standoff gets.
-  ctx.strokeStyle = COLORS.cat;
+  ctx.strokeStyle = spec.fur;
   ctx.lineWidth = 9;
   ctx.lineCap = 'round';
   const lash = Math.sin(cat.bob * 1.6) * (0.25 + aggroGlow * 0.5);
+  const tailTipX = -w * 0.5;
+  const tailTipY = -h * 0.95 - lash * 26;
   ctx.beginPath();
   ctx.moveTo(-w * 0.34, -h * 0.35);
-  ctx.quadraticCurveTo(-w * 0.62, -h * 0.55 - lash * 22, -w * 0.5, -h * 0.95 - lash * 26);
+  ctx.quadraticCurveTo(-w * 0.62, -h * 0.55 - lash * 22, tailTipX, tailTipY);
   ctx.stroke();
+  if (pointed) {
+    ctx.fillStyle = spec.patternColor;
+    ctx.beginPath();
+    ctx.ellipse(tailTipX, tailTipY, 6, 8, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Body.
-  ctx.fillStyle = COLORS.cat;
+  ctx.fillStyle = spec.fur;
   ctx.beginPath();
   ctx.ellipse(0, -h * 0.4, w * 0.4, h * 0.34, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Tabby stripes.
-  ctx.save();
-  ctx.beginPath();
-  ctx.ellipse(0, -h * 0.4, w * 0.4, h * 0.34, 0, 0, Math.PI * 2);
-  ctx.clip();
-  ctx.fillStyle = COLORS.catStripe;
-  for (let i = -1; i <= 2; i++) {
-    ctx.fillRect(i * 13 - 4, -h * 0.8, 6, h);
+  if (spec.pattern === 'tabby') {
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, -h * 0.4, w * 0.4, h * 0.34, 0, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = spec.patternColor;
+    for (let i = -1; i <= 2; i++) {
+      ctx.fillRect(i * 13 - 4, -h * 0.8, 6, h);
+    }
+    ctx.restore();
   }
-  ctx.restore();
+
+  // A Persian's long coat reads as a few soft tufts poofing past the outline.
+  if (spec.fluffy) drawFluffTufts(ctx, w, h, spec);
 
   // Legs.
-  ctx.fillStyle = COLORS.catDark;
+  ctx.fillStyle = legColor;
   ctx.fillRect(-w * 0.3, -h * 0.22, 11, h * 0.22);
   ctx.fillRect(w * 0.1, -h * 0.22, 11, h * 0.22);
 
   // Head, out front.
   const headX = w * 0.34;
   const headY = -h * 0.68;
-  ctx.fillStyle = COLORS.cat;
+  ctx.fillStyle = spec.fur;
   ctx.beginPath();
   ctx.ellipse(headX, headY, w * 0.24, h * 0.28, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Ears — pinned back when stunned, alert otherwise.
   const earTilt = stunned ? 0.9 : 0;
+  const earColor = pointed ? spec.patternColor : spec.fur;
   for (const side of [-1, 1] as const) {
     ctx.save();
     ctx.translate(headX + side * w * 0.13, headY - h * 0.19);
     ctx.rotate(side * earTilt);
+    ctx.fillStyle = earColor;
     ctx.beginPath();
     ctx.moveTo(-7, 7);
     ctx.lineTo(0, -13);
@@ -223,25 +243,44 @@ export function drawCat(ctx: Ctx, cat: Cat, pawX: number, aggroGlow: number): vo
     ctx.lineTo(4, 4);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = COLORS.cat;
     ctx.restore();
   }
 
-  drawCatFace(ctx, headX, headY, cat, stunned);
+  drawCatFace(ctx, headX, headY, cat, stunned, spec);
 
   // Front paw — extends during a swipe. pawX is world space, so undo the flip.
   const localPawX = (pawX - cat.x) * cat.facing;
-  ctx.strokeStyle = COLORS.catDark;
+  ctx.strokeStyle = legColor;
   ctx.lineWidth = 9;
   ctx.beginPath();
   ctx.moveTo(w * 0.14, -h * 0.3);
   ctx.lineTo(localPawX, -h * 0.14);
   ctx.stroke();
-  ctx.fillStyle = COLORS.catDark;
+  ctx.fillStyle = legColor;
   ctx.beginPath();
   ctx.ellipse(localPawX, -h * 0.14, 13, 9, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  ctx.restore();
+}
+
+const FLUFF_TUFTS = [
+  [-0.4, -0.45, 0.13],
+  [-0.18, -0.62, 0.12],
+  [0.06, -0.66, 0.12],
+  [0.24, -0.58, 0.11],
+  [0.34, -0.4, 0.1],
+] as const;
+
+function drawFluffTufts(ctx: Ctx, w: number, h: number, spec: CatBreedSpec): void {
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = spec.fur;
+  for (const [fx, fy, fr] of FLUFF_TUFTS) {
+    ctx.beginPath();
+    ctx.ellipse(fx * w, fy * h, fr * w, fr * h * 0.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -250,7 +289,7 @@ export function catHeadPosition(cat: Cat): { x: number; y: number } {
   return { x: cat.x + cat.facing * CAT.width * 0.34, y: DESK.surfaceY - CAT.height * 0.68 };
 }
 
-function drawCatFace(ctx: Ctx, x: number, y: number, cat: Cat, stunned: boolean): void {
+function drawCatFace(ctx: Ctx, x: number, y: number, cat: Cat, stunned: boolean, spec: CatBreedSpec): void {
   if (stunned) {
     // X_X
     ctx.strokeStyle = COLORS.danger;
@@ -268,7 +307,7 @@ function drawCatFace(ctx: Ctx, x: number, y: number, cat: Cat, stunned: boolean)
 
   const staring = cat.staring;
   const eyeR = staring ? 7.5 : 5.5;
-  ctx.fillStyle = COLORS.catEye;
+  ctx.fillStyle = spec.eye;
   for (const dx of [-7, 9]) {
     ctx.beginPath();
     ctx.ellipse(x + dx, y - 2, eyeR, eyeR, 0, 0, Math.PI * 2);
@@ -309,7 +348,7 @@ function drawCatFace(ctx: Ctx, x: number, y: number, cat: Cat, stunned: boolean)
     // Furrowed brow — the cat is committing to the bit.
     ctx.save();
     ctx.globalAlpha = 0.75;
-    ctx.strokeStyle = COLORS.catDark;
+    ctx.strokeStyle = spec.furDark;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(x - 13, y - 13);
@@ -394,7 +433,7 @@ export function drawEyeContact(ctx: Ctx, cat: Cat, strength: number): void {
   const head = catHeadPosition(cat);
   ctx.save();
   ctx.globalAlpha = 0.25 + strength * 0.55;
-  ctx.strokeStyle = COLORS.catEye;
+  ctx.strokeStyle = CAT_BREEDS[cat.breed].eye;
   ctx.lineWidth = 2 + strength * 2;
   ctx.setLineDash([10, 8]);
   ctx.lineDashOffset = -performance.now() / 24;

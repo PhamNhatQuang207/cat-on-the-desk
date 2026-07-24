@@ -3,10 +3,11 @@
 import { sfx } from '../engine/audio.ts';
 import type { InputSource } from '../engine/input.ts';
 import { Rng } from '../engine/rng.ts';
-import { COLORS, DESK, FX, ITEM_SPECS, OWNER, PHYSICS, VIEW } from './config.ts';
+import { CAT_BREED_ORDER, COLORS, DESK, FX, ITEM_SPECS, OWNER, PHYSICS, VIEW } from './config.ts';
 import { updateCat } from './entities/cat.ts';
 import { addAggro, updateOwner } from './entities/owner.ts';
 import { updateThreats } from './entities/threats.ts';
+import { saveSelectedBreed } from './systems/breeds.ts';
 import { difficultyAt } from './systems/difficulty.ts';
 import { stepItem } from './systems/physics.ts';
 import { comboMultiplier, decayCombo, extendCombo, saveHighScore, scoreForItem, stareMultiplier } from './systems/scoring.ts';
@@ -21,6 +22,8 @@ export function updateGame(state: GameState, input: InputSource, dt: number): vo
 
   switch (state.phase) {
     case 'title':
+      if (input.wasPressed('left')) cycleBreed(state, -1);
+      else if (input.wasPressed('right')) cycleBreed(state, 1);
       if (input.wasPressed('swipe') || input.wasPressed('confirm')) {
         startRun(state);
         sfx.meow();
@@ -48,6 +51,15 @@ export function updateGame(state: GameState, input: InputSource, dt: number): vo
   }
 
   input.endFrame();
+}
+
+function cycleBreed(state: GameState, dir: -1 | 1): void {
+  const order = CAT_BREED_ORDER;
+  const index = order.indexOf(state.selectedBreed);
+  const next = order[(index + dir + order.length) % order.length]!;
+  state.selectedBreed = next;
+  saveSelectedBreed(next);
+  sfx.nudge();
 }
 
 function updatePlaying(state: GameState, input: InputSource, dt: number): void {

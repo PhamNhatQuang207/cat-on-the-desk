@@ -1,42 +1,73 @@
-import { COLORS, VIEW } from '../game/config.ts';
-import type { GameState } from '../game/types.ts';
+import { CAT, CAT_BREED_ORDER, CAT_BREEDS, COLORS, DESK, VIEW } from '../game/config.ts';
+import type { Cat, GameState } from '../game/types.ts';
 import { text, type Ctx } from './draw.ts';
-import { keyCap } from './sprites.ts';
+import { drawCat, keyCap } from './sprites.ts';
 
 function scrim(ctx: Ctx, alpha: number): void {
   ctx.fillStyle = `rgba(10, 7, 15, ${alpha})`;
   ctx.fillRect(0, 0, VIEW.width, VIEW.height);
 }
 
-export function drawTitle(ctx: Ctx): void {
+export function drawTitle(ctx: Ctx, state: GameState): void {
   scrim(ctx, 0.72);
   const cx = VIEW.width / 2;
 
-  text(ctx, 'CAT ON A DESK', cx, 150, { size: 62, color: COLORS.text, align: 'center', weight: '900' });
-  text(ctx, "(Don't Touch Anything!)", cx, 188, { size: 22, color: COLORS.warn, align: 'center' });
-  text(ctx, 'Push everything off. Make eye contact. Regret nothing.', cx, 232, {
-    size: 17,
-    color: COLORS.dim,
-    align: 'center',
-  });
+  text(ctx, 'CAT ON A DESK', cx, 88, { size: 46, color: COLORS.text, align: 'center', weight: '900' });
+  text(ctx, "(Don't Touch Anything!)", cx, 118, { size: 18, color: COLORS.warn, align: 'center' });
 
-  drawControls(ctx, 290);
+  drawBreedPicker(ctx, state, 146);
 
-  text(ctx, 'Press SPACE to start', cx, 470, { size: 24, color: COLORS.good, align: 'center', weight: '800' });
+  drawControls(ctx, 346);
+
+  text(ctx, 'Press SPACE to start', cx, 492, { size: 22, color: COLORS.good, align: 'center', weight: '800' });
+}
+
+function drawBreedPicker(ctx: Ctx, state: GameState, y: number): void {
+  const cx = VIEW.width / 2;
+  const spec = CAT_BREEDS[state.selectedBreed];
+  const index = CAT_BREED_ORDER.indexOf(state.selectedBreed);
+
+  text(ctx, 'CHOOSE YOUR CAT', cx, y, { size: 13, color: COLORS.dim, align: 'center', weight: '700' });
+
+  keyCap(ctx, '◄', cx - 168, y + 14, 42, 42);
+  keyCap(ctx, '►', cx + 126, y + 14, 42, 42);
+
+  // Preview with the real sprite, so it never drifts from what plays in-game.
+  const previewCat: Cat = {
+    breed: state.selectedBreed,
+    x: cx,
+    facing: 1,
+    swipeTimer: 0,
+    swipeCooldown: 0,
+    swipeConnected: true,
+    staring: false,
+    stareTime: 0,
+    stunTimer: 0,
+    bob: performance.now() / 500,
+  };
+  const previewAnchorY = y + 80;
+  ctx.save();
+  ctx.translate(0, previewAnchorY - DESK.surfaceY);
+  drawCat(ctx, previewCat, previewCat.x + CAT.pawReach * 0.35, 0.1);
+  ctx.restore();
+
+  text(ctx, spec.name, cx, y + 106, { size: 21, color: COLORS.text, align: 'center', weight: '800' });
+  text(ctx, spec.tagline, cx, y + 128, { size: 13, color: COLORS.dim, align: 'center' });
+  text(ctx, `${index + 1} / ${CAT_BREED_ORDER.length}`, cx, y + 146, { size: 12, color: COLORS.dim, align: 'center' });
 }
 
 function drawControls(ctx: Ctx, y: number): void {
   const cx = VIEW.width / 2;
   const rows: Array<[string, string]> = [
-    ['← →', 'Prowl along the desk'],
+    ['← →', 'Prowl the desk (title: browse cats)'],
     ['SPACE', 'Paw swipe — heavy things need several'],
     ['SHIFT', 'Hold eye contact for up to x3 points (you cannot move)'],
     ['P', 'Pause'],
   ];
   rows.forEach(([key, desc], i) => {
-    const rowY = y + i * 40;
-    keyCap(ctx, key, cx - 250, rowY - 22, 76, 30);
-    text(ctx, desc, cx - 156, rowY - 2, { size: 17, color: COLORS.text });
+    const rowY = y + i * 33;
+    keyCap(ctx, key, cx - 250, rowY - 19, 76, 26);
+    text(ctx, desc, cx - 156, rowY, { size: 15, color: COLORS.text });
   });
 }
 

@@ -1,11 +1,12 @@
 import { sfx } from '../../engine/audio.ts';
 import type { InputSource } from '../../engine/input.ts';
-import { CAT, DESK } from '../config.ts';
+import { CAT, DESK, type CatBreed } from '../config.ts';
 import { applySwipe } from '../systems/physics.ts';
 import type { Cat, GameState, Item } from '../types.ts';
 
-export function createCat(): Cat {
+export function createCat(breed: CatBreed = 'orange'): Cat {
   return {
+    breed,
     x: CAT.startX,
     facing: -1,
     swipeTimer: 0,

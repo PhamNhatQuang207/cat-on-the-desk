@@ -44,7 +44,7 @@ export function render(ctx: Ctx, state: GameState, canvas: HTMLCanvasElement): v
 
   if (state.phase !== 'title') drawHud(ctx, state);
 
-  if (state.phase === 'title') drawTitle(ctx);
+  if (state.phase === 'title') drawTitle(ctx, state);
   else if (state.phase === 'paused') drawPaused(ctx);
   else if (state.phase === 'gameover') drawGameOver(ctx, state);
 

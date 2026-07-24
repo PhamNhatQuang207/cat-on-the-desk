@@ -1,4 +1,4 @@
-import { COLORS, OWNER, SCORING, STARE, VIEW } from '../game/config.ts';
+import { CAT_BREEDS, COLORS, OWNER, SCORING, STARE, VIEW } from '../game/config.ts';
 import { comboMultiplier, stareMultiplier } from '../game/systems/scoring.ts';
 import type { GameState } from '../game/types.ts';
 import { ellipse, meter, text, type Ctx } from './draw.ts';
@@ -46,13 +46,14 @@ function drawAggro(ctx: Ctx, state: GameState): void {
 function drawStrikes(ctx: Ctx, state: GameState): void {
   const remaining = OWNER.maxStrikes - state.strikes;
   const x = VIEW.width - 26;
+  const spec = CAT_BREEDS[state.cat.breed];
   for (let i = 0; i < OWNER.maxStrikes; i++) {
     const cx = x - i * 26;
     const alive = i < remaining;
     ctx.save();
     ctx.globalAlpha = alive ? 1 : 0.3;
     // Lives are little cat heads; spent ones go grey.
-    const fur = alive ? COLORS.cat : '#5b5468';
+    const fur = alive ? spec.fur : '#5b5468';
     ellipse(ctx, cx, 78, 9, 8, fur);
     ctx.fillStyle = fur;
     ctx.beginPath();
@@ -67,7 +68,7 @@ function drawStrikes(ctx: Ctx, state: GameState): void {
     ctx.lineTo(cx + 1, 73);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = alive ? COLORS.catEye : '#3a3546';
+    ctx.fillStyle = alive ? spec.eye : '#3a3546';
     ctx.fillRect(cx - 5, 76, 3, 3);
     ctx.fillRect(cx + 2, 76, 3, 3);
     ctx.restore();

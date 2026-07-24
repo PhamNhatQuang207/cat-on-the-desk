@@ -55,6 +55,83 @@ export const PHYSICS = {
   floorY: DESK.surfaceY + 150,
 } as const;
 
+export type CatBreed = 'orange' | 'british_shorthair' | 'persian' | 'siamese' | 'black';
+
+export interface CatBreedSpec {
+  id: CatBreed;
+  name: string;
+  tagline: string;
+  /** Main coat color. */
+  fur: string;
+  /** Legs, paws, and shading. */
+  furDark: string;
+  /** Tabby stripes, or the dark points on a Siamese. Unused for solid coats. */
+  pattern: 'tabby' | 'solid' | 'pointed';
+  patternColor: string;
+  eye: string;
+  /** Persian-style long, fluffy coat gets a few extra fur tufts. */
+  fluffy?: boolean;
+}
+
+export const CAT_BREEDS: Record<CatBreed, CatBreedSpec> = {
+  orange: {
+    id: 'orange',
+    name: 'Orange Tabby',
+    tagline: 'Classic chaos, default settings.',
+    fur: '#e5924a',
+    furDark: '#bd6b2e',
+    pattern: 'tabby',
+    patternColor: '#c9762f',
+    eye: '#8ef2a6',
+  },
+  british_shorthair: {
+    id: 'british_shorthair',
+    name: 'British Shorthair',
+    tagline: 'Round, plush, and unbothered.',
+    fur: '#9aa3b5',
+    furDark: '#7b8497',
+    pattern: 'solid',
+    patternColor: '#7b8497',
+    eye: '#e8a23c',
+  },
+  persian: {
+    id: 'persian',
+    name: 'Persian',
+    tagline: 'Fabulous, flammable, fluffy.',
+    fur: '#f3ead8',
+    furDark: '#d9c9a8',
+    pattern: 'solid',
+    patternColor: '#d9c9a8',
+    eye: '#79c3ef',
+    fluffy: true,
+  },
+  siamese: {
+    id: 'siamese',
+    name: 'Siamese',
+    tagline: 'Points of pure judgment.',
+    fur: '#e8dcc0',
+    furDark: '#c7b892',
+    pattern: 'pointed',
+    patternColor: '#4a3626',
+    eye: '#5ec8f2',
+  },
+  black: {
+    id: 'black',
+    name: 'Black Cat',
+    tagline: 'Bad luck, for the owner.',
+    fur: '#2e2a35',
+    furDark: '#1c1922',
+    pattern: 'solid',
+    patternColor: '#1c1922',
+    eye: '#f2d68e',
+  },
+} as const;
+
+/** Selection order on the title screen. */
+export const CAT_BREED_ORDER: CatBreed[] = ['orange', 'british_shorthair', 'persian', 'siamese', 'black'];
+
+export const CAT_BREED_STORAGE_KEY = 'cat-on-the-desk.breed';
+
 export type ItemKind = 'mug' | 'glass' | 'plant' | 'phone' | 'vase' | 'laptop' | 'monitor';
 
 export interface ItemSpec {
@@ -170,12 +247,6 @@ export const COLORS = {
   deskFace: '#6b4530',
   deskEdgeGlow: '#ffca6b',
   floor: '#120e19',
-  /* A ginger cat: the only thing on screen that reads instantly against the
-     dark room, which matters because it is what the player is tracking. */
-  cat: '#e5924a',
-  catDark: '#bd6b2e',
-  catStripe: '#c9762f',
-  catEye: '#8ef2a6',
   owner: '#d9a273',
   ownerShirt: '#3d6b8f',
   danger: '#ff5a6e',
