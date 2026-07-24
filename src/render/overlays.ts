@@ -106,6 +106,14 @@ export function drawGameOver(ctx: Ctx, state: GameState): void {
     weight: '800',
   });
 
+  const spec = CAT_BREEDS[state.selectedBreed];
+  text(ctx, `🐾 ← → to pick your next cat — ${spec.name}`, cx, 426, {
+    size: 15,
+    color: COLORS.dim,
+    align: 'center',
+    weight: '700',
+  });
+
   text(ctx, 'Press SPACE to get back on the desk', cx, 464, {
     size: 22,
     color: COLORS.good,

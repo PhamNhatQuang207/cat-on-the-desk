@@ -22,15 +22,10 @@ export function updateGame(state: GameState, input: InputSource, dt: number): vo
 
   switch (state.phase) {
     case 'title':
+    case 'gameover':
+      // The cat is still yours to pick right up until the next run starts.
       if (input.wasPressed('left')) cycleBreed(state, -1);
       else if (input.wasPressed('right')) cycleBreed(state, 1);
-      if (input.wasPressed('swipe') || input.wasPressed('confirm')) {
-        startRun(state);
-        sfx.meow();
-      }
-      break;
-
-    case 'gameover':
       if (input.wasPressed('swipe') || input.wasPressed('confirm')) {
         startRun(state);
         sfx.meow();

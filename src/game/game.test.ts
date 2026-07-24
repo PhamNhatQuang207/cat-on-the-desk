@@ -165,6 +165,28 @@ describe('cat selection', () => {
     expect(state.phase).toBe('playing');
     expect(state.cat.breed).toBe(CAT_BREED_ORDER[2]);
   });
+
+  it('lets the player switch breeds again from the game-over screen', () => {
+    const state = createGameState();
+    const input = new FakeInput();
+    input.tap('swipe');
+    updateGame(state, input, STEP);
+    state.strikes = OWNER.maxStrikes;
+    updateGame(state, input, STEP);
+    expect(state.phase).toBe('gameover');
+    const initialBreed = state.selectedBreed;
+
+    input.tap('right');
+    updateGame(state, input, STEP);
+    const newBreed = CAT_BREED_ORDER[(CAT_BREED_ORDER.indexOf(initialBreed) + 1) % CAT_BREED_ORDER.length];
+    expect(state.selectedBreed).toBe(newBreed);
+    expect(state.phase).toBe('gameover');
+
+    input.tap('swipe');
+    updateGame(state, input, STEP);
+    expect(state.phase).toBe('playing');
+    expect(state.cat.breed).toBe(newBreed);
+  });
 });
 
 describe('movement', () => {
