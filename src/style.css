@@ -29,3 +29,63 @@ body {
   cursor: none;
   image-rendering: auto;
 }
+
+/* On-screen thumb controls. Hidden until a touchscreen is detected, so a
+   desktop player never sees them. */
+.touch-controls[hidden] {
+  display: none;
+}
+
+.touch-controls {
+  position: fixed;
+  inset: auto 0 0 0;
+  /* Clear of a notch, a home indicator, or a rounded corner. */
+  padding: 0 max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-right));
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  pointer-events: none;
+}
+
+.tc-button {
+  /* Comfortably past the 44px minimum touch target, even on a small phone. */
+  width: 74px;
+  height: 74px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #f4eefb;
+  font-family: inherit;
+  font-size: 26px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  /* The smash payoff happens along the bottom of the scene, so these sit
+     quietly over it until a thumb is actually on one. */
+  opacity: 0.55;
+  transition: opacity 90ms ease, background-color 90ms ease, transform 90ms ease;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tc-button.is-held {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(0.94);
+}
+
+/* Movement under the left thumb, the paw under the right. */
+.tc-swipe {
+  margin-left: auto;
+  width: 88px;
+  height: 88px;
+  font-size: 34px;
+  background: rgba(142, 242, 166, 0.18);
+  border-color: rgba(142, 242, 166, 0.45);
+}
+
+.tc-swipe.is-held {
+  background: rgba(142, 242, 166, 0.36);
+}

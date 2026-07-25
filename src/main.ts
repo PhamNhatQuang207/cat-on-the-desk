@@ -1,6 +1,7 @@
 import { initAudio } from './engine/audio.ts';
 import { Input } from './engine/input.ts';
 import { startLoop } from './engine/loop.ts';
+import { mountTouchControls } from './engine/touch.ts';
 import { VIEW } from './game/config.ts';
 import { updateGame } from './game/game.ts';
 import { createGameState } from './game/state.ts';
@@ -34,6 +35,7 @@ const state = createGameState();
 const input = new Input();
 // Browsers block audio until the player interacts, so start it on first input.
 input.onFirstGesture = () => initAudio();
+mountTouchControls(input, canvas);
 
 startLoop({
   update: (dt) => updateGame(state, input, dt),
