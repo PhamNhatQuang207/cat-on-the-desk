@@ -35,9 +35,15 @@ const state = createGameState();
 const input = new Input();
 // Browsers block audio until the player interacts, so start it on first input.
 input.onFirstGesture = () => initAudio();
-mountTouchControls(input, canvas);
+const touchControls = mountTouchControls(input, canvas);
 
 startLoop({
   update: (dt) => updateGame(state, input, dt),
-  render: () => render(ctx, state, canvas),
+  render: () => {
+    // Keeping the phase mapping here leaves `engine/` free of game concepts.
+    touchControls.setPauseState(
+      state.phase === 'playing' ? 'pause' : state.phase === 'paused' ? 'resume' : 'hidden',
+    );
+    render(ctx, state, canvas);
+  },
 });

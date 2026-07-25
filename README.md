@@ -26,8 +26,8 @@ npm run dev      # http://localhost:5173
 | `Enter` / `Space` | Start / restart from the title and game-over screens |
 
 On a touchscreen, thumb controls fade in automatically: `◀` `▶` to prowl (and
-to browse cats on the title screen), and the paw button — or a tap anywhere on
-the desk — to swipe. Pause is keyboard-only for now.
+to browse cats on the title screen), the paw button — or a tap anywhere on the
+desk — to swipe, and a pause button at the top of the screen during a run.
 
 ## How it works
 

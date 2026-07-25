@@ -20,24 +20,45 @@ interface ButtonSpec {
   hold: boolean;
 }
 
-const BUTTONS: ButtonSpec[] = [
+/** The thumb bar along the bottom of the screen, left to right. */
+const PAD_BUTTONS: ButtonSpec[] = [
   { action: 'left', label: '◀', className: 'tc-left', hold: true },
   { action: 'right', label: '▶', className: 'tc-right', hold: true },
   { action: 'swipe', label: '🐾', className: 'tc-swipe', hold: false },
 ];
 
 /**
+ * Pause is meaningless outside a run, and the same button has to read as
+ * "resume" once the game is actually paused.
+ */
+export type PauseButtonState = 'hidden' | 'pause' | 'resume';
+
+export interface TouchControls {
+  setPauseState(state: PauseButtonState): void;
+}
+
+/**
  * Builds the control overlay and wires it to `input`. Safe to call on desktop:
  * the overlay stays hidden until something proves the device has a touchscreen.
  */
-export function mountTouchControls(input: Input, canvas: HTMLCanvasElement): void {
+export function mountTouchControls(input: Input, canvas: HTMLCanvasElement): TouchControls {
   const root = document.createElement('div');
   root.className = 'touch-controls';
   root.hidden = true;
 
-  for (const spec of BUTTONS) {
-    root.appendChild(createButton(spec, input));
+  const pad = document.createElement('div');
+  pad.className = 'tc-pad';
+  for (const spec of PAD_BUTTONS) {
+    pad.appendChild(createButton(spec, input));
   }
+  root.appendChild(pad);
+
+  // Pause sits top-centre: the one part of the HUD with nothing in it, and far
+  // enough from where the thumbs rest that it is hard to hit by accident.
+  const pause = createButton({ action: 'pause', label: '❚❚', className: 'tc-pause', hold: false }, input);
+  pause.hidden = true;
+  root.appendChild(pause);
+
   document.body.appendChild(root);
 
   // Tapping the play area swipes too, so the paw is reachable without hunting
@@ -54,6 +75,18 @@ export function mountTouchControls(input: Input, canvas: HTMLCanvasElement): voi
   if (window.matchMedia?.('(pointer: coarse)').matches) reveal();
   // Hybrid laptops report a fine pointer until a finger actually lands.
   window.addEventListener('touchstart', reveal, { once: true, passive: true });
+
+  let pauseState: PauseButtonState | null = null;
+  return {
+    setPauseState(next) {
+      // Called every frame, so only touch the DOM when it actually changes.
+      if (next === pauseState) return;
+      pauseState = next;
+      pause.hidden = next === 'hidden';
+      pause.textContent = next === 'resume' ? '▶' : '❚❚';
+      pause.setAttribute('aria-label', next === 'resume' ? 'resume' : 'pause');
+    },
+  };
 }
 
 function createButton(spec: ButtonSpec, input: Input): HTMLButtonElement {

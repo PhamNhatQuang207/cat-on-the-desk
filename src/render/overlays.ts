@@ -72,7 +72,7 @@ export function drawPaused(ctx: Ctx): void {
   scrim(ctx, 0.6);
   const cx = VIEW.width / 2;
   text(ctx, 'PAUSED', cx, VIEW.height / 2 - 10, { size: 52, color: COLORS.text, align: 'center', weight: '900' });
-  text(ctx, 'Press P to resume', cx, VIEW.height / 2 + 30, { size: 20, color: COLORS.dim, align: 'center' });
+  text(ctx, 'Press P or tap to resume', cx, VIEW.height / 2 + 30, { size: 20, color: COLORS.dim, align: 'center' });
 }
 
 export function drawGameOver(ctx: Ctx, state: GameState): void {
