@@ -12,8 +12,6 @@ export function createCat(breed: CatBreed = 'orange'): Cat {
     swipeTimer: 0,
     swipeCooldown: 0,
     swipeConnected: true,
-    staring: false,
-    stareTime: 0,
     stunTimer: 0,
     bob: 0,
   };
@@ -36,8 +34,6 @@ export function isSwiping(cat: Cat): boolean {
 
 export function stun(state: GameState): void {
   state.cat.stunTimer = CAT.stunDuration;
-  state.cat.staring = false;
-  state.cat.stareTime = 0;
   state.cat.swipeTimer = 0;
 }
 
@@ -46,31 +42,20 @@ export function updateCat(state: GameState, input: InputSource, dt: number): voi
 
   if (cat.stunTimer > 0) {
     cat.stunTimer -= dt;
-    cat.staring = false;
-    cat.stareTime = 0;
     return;
   }
 
-  cat.staring = input.isDown('stare');
-  cat.stareTime = cat.staring ? cat.stareTime + dt : 0;
-  if (cat.staring && cat.stareTime > 0 && cat.stareTime - dt <= 0) sfx.stare();
-
-  // Staring commits the cat in place — that is what makes it a real gamble.
-  if (!cat.staring) {
-    let dir = 0;
-    if (input.isDown('left')) dir -= 1;
-    if (input.isDown('right')) dir += 1;
-    if (dir !== 0) {
-      cat.x += dir * CAT.speed * dt;
-      cat.facing = dir < 0 ? -1 : 1;
-      cat.bob += dt * 11;
-    } else {
-      cat.bob += dt * 1.5;
-    }
-    cat.x = Math.max(CAT.minX, Math.min(CAT.maxX, cat.x));
+  let dir = 0;
+  if (input.isDown('left')) dir -= 1;
+  if (input.isDown('right')) dir += 1;
+  if (dir !== 0) {
+    cat.x += dir * CAT.speed * dt;
+    cat.facing = dir < 0 ? -1 : 1;
+    cat.bob += dt * 11;
   } else {
     cat.bob += dt * 1.5;
   }
+  cat.x = Math.max(CAT.minX, Math.min(CAT.maxX, cat.x));
 
   cat.swipeCooldown = Math.max(0, cat.swipeCooldown - dt);
 

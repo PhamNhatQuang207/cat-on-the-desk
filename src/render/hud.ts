@@ -1,5 +1,5 @@
-import { CAT_BREEDS, COLORS, OWNER, SCORING, STARE, VIEW } from '../game/config.ts';
-import { comboMultiplier, stareMultiplier } from '../game/systems/scoring.ts';
+import { CAT_BREEDS, COLORS, OWNER, SCORING, VIEW } from '../game/config.ts';
+import { comboMultiplier } from '../game/systems/scoring.ts';
 import type { GameState } from '../game/types.ts';
 import { ellipse, meter, text, type Ctx } from './draw.ts';
 
@@ -14,19 +14,6 @@ export function drawHud(ctx: Ctx, state: GameState): void {
     const pulse = 1 + Math.max(0, state.comboTimer / SCORING.comboWindow - 0.8) * 0.6;
     text(ctx, `x${mult} COMBO`, 26, 100, { size: 20 * pulse, color: COLORS.warn, weight: '800' });
     meter(ctx, 26, 108, 130, 6, state.comboTimer / SCORING.comboWindow, COLORS.warn);
-  }
-
-  // Stare multiplier, front and center while it's building.
-  if (state.cat.staring) {
-    const mult = stareMultiplier(state.cat.stareTime, true);
-    const t = Math.min(1, state.cat.stareTime / STARE.rampTime);
-    text(ctx, `👁 EYE CONTACT  x${mult.toFixed(1)}`, VIEW.width / 2, 60, {
-      size: 26 + t * 8,
-      color: t >= 1 ? COLORS.good : COLORS.warn,
-      align: 'center',
-      weight: '800',
-    });
-    meter(ctx, VIEW.width / 2 - 90, 72, 180, 8, t, t >= 1 ? COLORS.good : COLORS.warn);
   }
 
   drawAggro(ctx, state);

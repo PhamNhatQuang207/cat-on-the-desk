@@ -7,13 +7,12 @@
 import { VIEW } from '../game/config.ts';
 import { pawPosition } from '../game/entities/cat.ts';
 import { riskLevel } from '../game/systems/physics.ts';
-import { stareMultiplier } from '../game/systems/scoring.ts';
 import type { GameState } from '../game/types.ts';
 import type { Ctx } from './draw.ts';
 import { drawHud } from './hud.ts';
 import { drawGameOver, drawPaused, drawTitle } from './overlays.ts';
 import { drawDebris, drawDesk, drawFloaters, drawRoom, drawShards, drawThreats } from './scene.ts';
-import { drawCat, drawEyeContact, drawItem, drawOwner } from './sprites.ts';
+import { drawCat, drawItem, drawOwner } from './sprites.ts';
 
 export function render(ctx: Ctx, state: GameState, canvas: HTMLCanvasElement): void {
   const scale = Math.min(canvas.width / VIEW.width, canvas.height / VIEW.height);
@@ -57,11 +56,6 @@ function drawWorld(ctx: Ctx, state: GameState): void {
   drawOwner(ctx, state.owner, state.elapsed);
   drawDesk(ctx);
   drawDebris(ctx, state.destroyed);
-
-  if (state.cat.staring) {
-    const strength = (stareMultiplier(state.cat.stareTime, true) - 1) / 2;
-    drawEyeContact(ctx, state.cat, strength);
-  }
 
   for (const item of state.items) {
     drawItem(ctx, item, riskLevel(item));

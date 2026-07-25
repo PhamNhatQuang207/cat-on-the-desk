@@ -176,15 +176,6 @@ export const SCORING = {
   highScoreKey: 'cat-on-the-desk.highscore',
 } as const;
 
-export const STARE = {
-  /** Seconds of held eye contact to reach the maximum multiplier. */
-  rampTime: 2.0,
-  minMultiplier: 1.0,
-  maxMultiplier: 3.0,
-  /** Extra aggro per second while staring — the cost of the bonus. */
-  aggroPerSecond: 0.22,
-} as const;
-
 export const OWNER = {
   /** Aggro is 0..1 and drives threat frequency and telegraph length. */
   aggroDecayPerSecond: 0.045,

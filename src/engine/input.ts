@@ -3,7 +3,7 @@
  * step, so the pressed set is cleared at the end of every frame.
  */
 
-export type Action = 'left' | 'right' | 'swipe' | 'stare' | 'pause' | 'confirm';
+export type Action = 'left' | 'right' | 'swipe' | 'pause' | 'confirm';
 
 const BINDINGS: Record<string, Action> = {
   ArrowLeft: 'left',
@@ -11,10 +11,6 @@ const BINDINGS: Record<string, Action> = {
   ArrowRight: 'right',
   KeyD: 'right',
   Space: 'swipe',
-  ShiftLeft: 'stare',
-  ShiftRight: 'stare',
-  ArrowUp: 'stare',
-  KeyW: 'stare',
   KeyP: 'pause',
   Escape: 'pause',
   Enter: 'confirm',

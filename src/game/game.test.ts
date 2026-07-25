@@ -1,8 +1,8 @@
 /**
  * End-to-end tests over the real update step. These drive `updateGame` with a
  * scripted input source, so they exercise the same code path the browser does
- * — including the parts (holding a key, holding a stare) that are impractical
- * to drive through browser automation.
+ * — including the parts (holding a key down) that are impractical to drive
+ * through browser automation.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -207,17 +207,6 @@ describe('movement', () => {
     expect(state.cat.facing).toBe(1);
     expect(state.cat.x).toBeCloseTo(CAT.maxX, 0);
   });
-
-  it('is frozen in place while holding eye contact', () => {
-    const { state, input } = startedGame();
-    const startX = state.cat.x;
-    input.hold('stare');
-    input.hold('left');
-    run(state, input, 1);
-
-    expect(state.cat.staring).toBe(true);
-    expect(state.cat.x).toBe(startX);
-  });
 });
 
 describe('the core loop: swipe an item off the desk', () => {
@@ -286,29 +275,6 @@ describe('the core loop: swipe an item off the desk', () => {
     };
 
     expect(swipesToDestroy('monitor')).toBeGreaterThan(swipesToDestroy('glass'));
-  });
-
-  it('awards more for the same item when destroyed under eye contact', () => {
-    const scoreFor = (staring: boolean): number => {
-      const { state, input } = startedGame();
-      const item = onlyItem(state, 'mug', DESK.edgeX + 4);
-      if (staring) {
-        // Establish the stare and let it ramp *before* the item goes over —
-        // the multiplier that counts is the one held when it smashes.
-        input.hold('stare');
-        run(state, input, 2.5);
-      }
-      // Give it just enough shove to go over on its own.
-      item.vx = -80;
-      run(state, input, 1.5);
-      expect(state.destroyed).toBe(1);
-      return state.score;
-    };
-
-    const plain = scoreFor(false);
-    const stared = scoreFor(true);
-    expect(stared).toBeGreaterThan(plain);
-    expect(stared / plain).toBeCloseTo(3, 1);
   });
 
   it('builds a combo across consecutive knock-offs', () => {

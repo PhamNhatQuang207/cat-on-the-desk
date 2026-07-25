@@ -246,7 +246,7 @@ export function drawCat(ctx: Ctx, cat: Cat, pawX: number, aggroGlow: number): vo
     ctx.restore();
   }
 
-  drawCatFace(ctx, headX, headY, cat, stunned, spec);
+  drawCatFace(ctx, headX, headY, stunned, spec);
 
   // Front paw — extends during a swipe. pawX is world space, so undo the flip.
   const localPawX = (pawX - cat.x) * cat.facing;
@@ -284,12 +284,7 @@ function drawFluffTufts(ctx: Ctx, w: number, h: number, spec: CatBreedSpec): voi
   ctx.restore();
 }
 
-/** World-space position of the cat's head — where the stare-down line starts. */
-export function catHeadPosition(cat: Cat): { x: number; y: number } {
-  return { x: cat.x + cat.facing * CAT.width * 0.34, y: DESK.surfaceY - CAT.height * 0.68 };
-}
-
-function drawCatFace(ctx: Ctx, x: number, y: number, cat: Cat, stunned: boolean, spec: CatBreedSpec): void {
+function drawCatFace(ctx: Ctx, x: number, y: number, stunned: boolean, spec: CatBreedSpec): void {
   if (stunned) {
     // X_X
     ctx.strokeStyle = COLORS.danger;
@@ -305,19 +300,16 @@ function drawCatFace(ctx: Ctx, x: number, y: number, cat: Cat, stunned: boolean,
     return;
   }
 
-  const staring = cat.staring;
-  const eyeR = staring ? 7.5 : 5.5;
   ctx.fillStyle = spec.eye;
   for (const dx of [-7, 9]) {
     ctx.beginPath();
-    ctx.ellipse(x + dx, y - 2, eyeR, eyeR, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + dx, y - 2, 5.5, 5.5, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  // Pupils: slits normally, wide saucers when staring the owner down.
   ctx.fillStyle = '#12101a';
   for (const dx of [-7, 9]) {
     ctx.beginPath();
-    ctx.ellipse(x + dx, y - 2, staring ? 4 : 1.6, staring ? 5 : 4.4, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + dx, y - 2, 1.6, 4.4, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -342,19 +334,6 @@ function drawCatFace(ctx: Ctx, x: number, y: number, cat: Cat, stunned: boolean,
     ctx.moveTo(x + 12, y + 9);
     ctx.lineTo(x + 30, y + 9 + dy);
     ctx.stroke();
-  }
-
-  if (staring) {
-    // Furrowed brow — the cat is committing to the bit.
-    ctx.save();
-    ctx.globalAlpha = 0.75;
-    ctx.strokeStyle = spec.furDark;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(x - 13, y - 13);
-    ctx.lineTo(x + 15, y - 13);
-    ctx.stroke();
-    ctx.restore();
   }
 }
 
@@ -386,8 +365,8 @@ export function drawOwner(ctx: Ctx, owner: Owner, elapsed: number): void {
   ctx.ellipse(0, headY - 26, 41, 24, 0, Math.PI, Math.PI * 2);
   ctx.fill();
 
-  // Eyes — narrow into a glare as anger rises, and go wide during eye contact.
-  const lidDrop = owner.lockedEyes ? -3 : anger * 7;
+  // Eyes — narrow into a glare as anger rises.
+  const lidDrop = anger * 7;
   for (const dx of [-15, 15]) {
     ctx.fillStyle = '#f7f2ff';
     ctx.beginPath();
@@ -417,30 +396,6 @@ export function drawOwner(ctx: Ctx, owner: Owner, elapsed: number): void {
   ctx.ellipse(0, headY + 22, 12 + anger * 6, mouthH / 2, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Sweat drop when the cat is staring them down.
-  if (owner.lockedEyes) {
-    ctx.fillStyle = '#8fd6ff';
-    ctx.beginPath();
-    ctx.ellipse(38, headY - 12, 5, 8, 0.3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.restore();
-}
-
-/** The dotted line of the stare-down, drawn between cat and owner. */
-export function drawEyeContact(ctx: Ctx, cat: Cat, strength: number): void {
-  const head = catHeadPosition(cat);
-  ctx.save();
-  ctx.globalAlpha = 0.25 + strength * 0.55;
-  ctx.strokeStyle = CAT_BREEDS[cat.breed].eye;
-  ctx.lineWidth = 2 + strength * 2;
-  ctx.setLineDash([10, 8]);
-  ctx.lineDashOffset = -performance.now() / 24;
-  ctx.beginPath();
-  ctx.moveTo(head.x, head.y);
-  ctx.lineTo(875, DESK.surfaceY - 96);
-  ctx.stroke();
   ctx.restore();
 }
 

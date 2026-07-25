@@ -38,8 +38,6 @@ export interface Cat {
   swipeCooldown: number;
   /** True once this swipe's contact frame has been resolved. */
   swipeConnected: boolean;
-  staring: boolean;
-  stareTime: number;
   stunTimer: number;
   /** Walk-cycle phase, cosmetic. */
   bob: number;
@@ -94,8 +92,6 @@ export interface Owner {
   nextThreatIn: number;
   /** Cosmetic: eased toward aggro so the face doesn't snap between moods. */
   displayAnger: number;
-  /** True while the cat is holding eye contact — owner stares back. */
-  lockedEyes: boolean;
 }
 
 export interface GameState {

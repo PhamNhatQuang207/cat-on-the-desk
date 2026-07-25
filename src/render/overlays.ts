@@ -40,8 +40,6 @@ function drawBreedPicker(ctx: Ctx, state: GameState, y: number): void {
     swipeTimer: 0,
     swipeCooldown: 0,
     swipeConnected: true,
-    staring: false,
-    stareTime: 0,
     stunTimer: 0,
     bob: performance.now() / 500,
   };
@@ -61,7 +59,6 @@ function drawControls(ctx: Ctx, y: number): void {
   const rows: Array<[string, string]> = [
     ['← →', 'Prowl the desk (title: browse cats)'],
     ['SPACE', 'Paw swipe — heavy things need several'],
-    ['SHIFT', 'Hold eye contact for up to x3 points (you cannot move)'],
     ['P', 'Pause'],
   ];
   rows.forEach(([key, desc], i) => {
