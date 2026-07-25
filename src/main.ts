@@ -41,9 +41,11 @@ startLoop({
   update: (dt) => updateGame(state, input, dt),
   render: () => {
     // Keeping the phase mapping here leaves `engine/` free of game concepts.
-    touchControls.setPauseState(
-      state.phase === 'playing' ? 'pause' : state.phase === 'paused' ? 'resume' : 'hidden',
+    touchControls.setPhase(
+      state.phase === 'playing' ? 'playing' : state.phase === 'paused' ? 'paused' : 'idle',
     );
-    render(ctx, state, canvas);
+    // On touch the pause menu *is* the paused screen, so the canvas one would
+    // only show through behind it.
+    render(ctx, state, canvas, { hidePausedOverlay: touchControls.isActive() });
   },
 });

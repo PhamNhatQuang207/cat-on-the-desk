@@ -14,7 +14,17 @@ import { drawGameOver, drawPaused, drawTitle } from './overlays.ts';
 import { drawDebris, drawDesk, drawFloaters, drawRoom, drawShards, drawThreats } from './scene.ts';
 import { drawCat, drawItem, drawOwner } from './sprites.ts';
 
-export function render(ctx: Ctx, state: GameState, canvas: HTMLCanvasElement): void {
+export interface RenderOptions {
+  /** Set when the touch pause menu is drawing its own, richer paused screen. */
+  hidePausedOverlay?: boolean;
+}
+
+export function render(
+  ctx: Ctx,
+  state: GameState,
+  canvas: HTMLCanvasElement,
+  options: RenderOptions = {},
+): void {
   const scale = Math.min(canvas.width / VIEW.width, canvas.height / VIEW.height);
   const offsetX = (canvas.width - VIEW.width * scale) / 2;
   const offsetY = (canvas.height - VIEW.height * scale) / 2;
@@ -44,7 +54,7 @@ export function render(ctx: Ctx, state: GameState, canvas: HTMLCanvasElement): v
   if (state.phase !== 'title') drawHud(ctx, state);
 
   if (state.phase === 'title') drawTitle(ctx, state);
-  else if (state.phase === 'paused') drawPaused(ctx);
+  else if (state.phase === 'paused' && !options.hidePausedOverlay) drawPaused(ctx);
   else if (state.phase === 'gameover') drawGameOver(ctx, state);
 
   ctx.restore();
