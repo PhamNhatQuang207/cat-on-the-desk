@@ -1,6 +1,7 @@
 import { initAudio } from './engine/audio.ts';
 import { Input } from './engine/input.ts';
 import { startLoop } from './engine/loop.ts';
+import { mountTouchControls } from './engine/touch.ts';
 import { VIEW } from './game/config.ts';
 import { updateGame } from './game/game.ts';
 import { createGameState } from './game/state.ts';
@@ -34,8 +35,17 @@ const state = createGameState();
 const input = new Input();
 // Browsers block audio until the player interacts, so start it on first input.
 input.onFirstGesture = () => initAudio();
+const touchControls = mountTouchControls(input, canvas);
 
 startLoop({
   update: (dt) => updateGame(state, input, dt),
-  render: () => render(ctx, state, canvas),
+  render: () => {
+    // Keeping the phase mapping here leaves `engine/` free of game concepts.
+    touchControls.setPhase(
+      state.phase === 'playing' ? 'playing' : state.phase === 'paused' ? 'paused' : 'idle',
+    );
+    // On touch the pause menu *is* the paused screen, so the canvas one would
+    // only show through behind it.
+    render(ctx, state, canvas, { hidePausedOverlay: touchControls.isActive() });
+  },
 });

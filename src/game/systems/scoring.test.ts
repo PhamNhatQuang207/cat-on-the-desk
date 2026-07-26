@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SCORING, STARE } from '../config.ts';
-import { comboMultiplier, decayCombo, extendCombo, scoreForItem, stareMultiplier } from './scoring.ts';
+import { SCORING } from '../config.ts';
+import { comboMultiplier, decayCombo, extendCombo, scoreForItem } from './scoring.ts';
 
 describe('comboMultiplier', () => {
   it('is x1 for the first knock-off', () => {
@@ -19,36 +19,14 @@ describe('comboMultiplier', () => {
   });
 });
 
-describe('stareMultiplier', () => {
-  it('is x1 when not staring', () => {
-    expect(stareMultiplier(5, false)).toBe(1);
-  });
-
-  it('ramps from the minimum to the maximum over the ramp time', () => {
-    expect(stareMultiplier(0, true)).toBeCloseTo(STARE.minMultiplier);
-    expect(stareMultiplier(STARE.rampTime, true)).toBeCloseTo(STARE.maxMultiplier);
-    expect(stareMultiplier(STARE.rampTime * 10, true)).toBeCloseTo(STARE.maxMultiplier);
-  });
-
-  it('is monotonic while the stare is held', () => {
-    let previous = 0;
-    for (let t = 0; t <= STARE.rampTime; t += 0.1) {
-      const value = stareMultiplier(t, true);
-      expect(value).toBeGreaterThanOrEqual(previous);
-      previous = value;
-    }
-  });
-});
-
 describe('scoreForItem', () => {
-  it('multiplies base points by both multipliers', () => {
-    expect(scoreForItem(100, 1, 1)).toBe(100);
-    expect(scoreForItem(100, 1, 3)).toBe(300);
-    expect(scoreForItem(100, 3, 1)).toBe(Math.round(100 * comboMultiplier(3)));
+  it('multiplies base points by the combo multiplier', () => {
+    expect(scoreForItem(100, 1)).toBe(100);
+    expect(scoreForItem(100, 3)).toBe(Math.round(100 * comboMultiplier(3)));
   });
 
   it('never awards zero points', () => {
-    expect(scoreForItem(0, 1, 1)).toBe(1);
+    expect(scoreForItem(0, 1)).toBe(1);
   });
 });
 

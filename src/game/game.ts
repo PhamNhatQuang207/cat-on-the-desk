@@ -3,13 +3,14 @@
 import { sfx } from '../engine/audio.ts';
 import type { InputSource } from '../engine/input.ts';
 import { Rng } from '../engine/rng.ts';
-import { COLORS, DESK, FX, ITEM_SPECS, OWNER, PHYSICS, VIEW } from './config.ts';
+import { CAT_BREED_ORDER, COLORS, DESK, FX, ITEM_SPECS, OWNER, PHYSICS, VIEW } from './config.ts';
 import { updateCat } from './entities/cat.ts';
 import { addAggro, updateOwner } from './entities/owner.ts';
 import { updateThreats } from './entities/threats.ts';
+import { saveSelectedBreed } from './systems/breeds.ts';
 import { difficultyAt } from './systems/difficulty.ts';
 import { stepItem } from './systems/physics.ts';
-import { comboMultiplier, decayCombo, extendCombo, saveHighScore, scoreForItem, stareMultiplier } from './systems/scoring.ts';
+import { comboMultiplier, decayCombo, extendCombo, saveHighScore, scoreForItem } from './systems/scoring.ts';
 import { pruneItems, updateSpawner } from './systems/spawn.ts';
 import { startRun } from './state.ts';
 import type { GameState, Item } from './types.ts';
@@ -21,13 +22,10 @@ export function updateGame(state: GameState, input: InputSource, dt: number): vo
 
   switch (state.phase) {
     case 'title':
-      if (input.wasPressed('swipe') || input.wasPressed('confirm')) {
-        startRun(state);
-        sfx.meow();
-      }
-      break;
-
     case 'gameover':
+      // The cat is still yours to pick right up until the next run starts.
+      if (input.wasPressed('left')) cycleBreed(state, -1);
+      else if (input.wasPressed('right')) cycleBreed(state, 1);
       if (input.wasPressed('swipe') || input.wasPressed('confirm')) {
         startRun(state);
         sfx.meow();
@@ -48,6 +46,15 @@ export function updateGame(state: GameState, input: InputSource, dt: number): vo
   }
 
   input.endFrame();
+}
+
+function cycleBreed(state: GameState, dir: -1 | 1): void {
+  const order = CAT_BREED_ORDER;
+  const index = order.indexOf(state.selectedBreed);
+  const next = order[(index + dir + order.length) % order.length]!;
+  state.selectedBreed = next;
+  saveSelectedBreed(next);
+  sfx.nudge();
 }
 
 function updatePlaying(state: GameState, input: InputSource, dt: number): void {
@@ -92,12 +99,11 @@ function onTipped(state: GameState, item: Item): void {
 }
 
 function onSmashed(state: GameState, item: Item): void {
-  const stareMult = stareMultiplier(state.cat.stareTime, state.cat.staring);
   const combo = extendCombo(state.combo);
   state.combo = combo.combo;
   state.comboTimer = combo.comboTimer;
 
-  const points = scoreForItem(item.points, state.combo, stareMult);
+  const points = scoreForItem(item.points, state.combo);
   state.score += points;
   state.destroyed += 1;
   state.flash = 1;
@@ -110,8 +116,7 @@ function onSmashed(state: GameState, item: Item): void {
   if (state.combo > 1) sfx.combo(Math.min(6, state.combo - 1));
 
   const label = ITEM_SPECS[item.kind].label;
-  const multText =
-    stareMult > 1.05 ? `  👁️ x${stareMult.toFixed(1)}` : state.combo > 1 ? `  x${comboMultiplier(state.combo)}` : '';
+  const multText = state.combo > 1 ? `  x${comboMultiplier(state.combo)}` : '';
 
   // Show the payoff where the item actually went over, clamped on-screen.
   const fx = Math.max(60, Math.min(VIEW.width - 60, item.x));
@@ -119,7 +124,7 @@ function onSmashed(state: GameState, item: Item): void {
     x: fx,
     y: DESK.surfaceY + 70,
     text: `${label} +${points}${multText}`,
-    color: stareMult > 1.05 ? COLORS.warn : COLORS.good,
+    color: COLORS.good,
     life: 1,
     scale: 1 + Math.min(0.6, points / 900),
   });

@@ -3,7 +3,7 @@
  * step, so the pressed set is cleared at the end of every frame.
  */
 
-export type Action = 'left' | 'right' | 'swipe' | 'stare' | 'pause' | 'confirm';
+export type Action = 'left' | 'right' | 'swipe' | 'pause' | 'confirm';
 
 const BINDINGS: Record<string, Action> = {
   ArrowLeft: 'left',
@@ -11,10 +11,6 @@ const BINDINGS: Record<string, Action> = {
   ArrowRight: 'right',
   KeyD: 'right',
   Space: 'swipe',
-  ShiftLeft: 'stare',
-  ShiftRight: 'stare',
-  ArrowUp: 'stare',
-  KeyW: 'stare',
   KeyP: 'pause',
   Escape: 'pause',
   Enter: 'confirm',
@@ -67,6 +63,21 @@ export class Input implements InputSource {
     if (this.gestured) return;
     this.gestured = true;
     this.onFirstGesture?.();
+  }
+
+  /**
+   * Drives an action from something other than the keyboard — the on-screen
+   * touch controls. Held exactly like a key, so `isDown`/`wasPressed` cannot
+   * tell the two apart and a hybrid device can use both at once.
+   */
+  press(action: Action): void {
+    this.gesture();
+    if (!this.down.has(action)) this.pressed.add(action);
+    this.down.add(action);
+  }
+
+  release(action: Action): void {
+    this.down.delete(action);
   }
 
   isDown(action: Action): boolean {

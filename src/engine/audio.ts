@@ -107,9 +107,6 @@ export const sfx = {
   hiss(): void {
     noise(0.5, 0.3, 5600);
   },
-  stare(): void {
-    tone('sine', 300, 900, 0.5, 0.05);
-  },
   gameOver(): void {
     tone('sawtooth', 400, 100, 0.5, 0.18);
     tone('sawtooth', 300, 70, 0.7, 0.14, 0.18);

@@ -4,7 +4,7 @@
  */
 
 import type { Rng } from '../../engine/rng.ts';
-import { OWNER, STARE, THREAT } from '../config.ts';
+import { OWNER, THREAT } from '../config.ts';
 import type { Difficulty } from '../systems/difficulty.ts';
 import type { GameState, Owner } from '../types.ts';
 import { createThreat, mostEndangeredItem, predictCatX } from './threats.ts';
@@ -14,7 +14,6 @@ export function createOwner(): Owner {
     aggro: 0,
     nextThreatIn: THREAT.intervalAtCalm,
     displayAnger: 0,
-    lockedEyes: false,
   };
 }
 
@@ -24,13 +23,9 @@ export function addAggro(owner: Owner, amount: number): void {
 
 export function updateOwner(state: GameState, rng: Rng, difficulty: Difficulty, dt: number): void {
   const owner = state.owner;
-  const cat = state.cat;
 
-  owner.lockedEyes = cat.staring;
-
-  // Aggro creeps up on its own, faster while the cat is staring you down.
+  // Aggro creeps up on its own.
   addAggro(owner, OWNER.aggroPerSecondIdle * dt - OWNER.aggroDecayPerSecond * dt);
-  if (cat.staring) addAggro(owner, STARE.aggroPerSecond * dt);
 
   // Ease the drawn expression toward the real value so the face doesn't snap.
   owner.displayAnger += (owner.aggro - owner.displayAnger) * Math.min(1, dt * 4);

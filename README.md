@@ -4,8 +4,8 @@ You are a cat. There is a desk. On the desk are expensive, fragile things.
 Your owner would very much like them to stay there.
 
 An endless arcade browser game. The desk drops away on **both** sides — shove
-everything off whichever edge is closer, hold eye contact with your owner while
-you do it, and dodge the spray bottle for as long as you can manage.
+everything off whichever edge is closer, and dodge the spray bottle for as
+long as you can manage.
 
 ▶ **Play it live:** https://phamnhatquang207.github.io/cat-on-the-desk/
 
@@ -22,9 +22,15 @@ npm run dev      # http://localhost:5173
 | --- | --- |
 | `←` `→` / `A` `D` | Prowl along the desk (and pick which edge to push toward) |
 | `Space` | Paw swipe — heavy things need several |
-| `Shift` (hold) | Hold eye contact: builds up to a **x3** multiplier, but you cannot move |
 | `P` / `Esc` | Pause |
 | `Enter` / `Space` | Start / restart from the title and game-over screens |
+
+On a touchscreen, thumb controls fade in automatically: `◀` `▶` to prowl (and
+to browse cats on the title screen), and the paw button — or a tap anywhere on
+the desk — to swipe. The `☰` button at the top of the screen pauses and opens a
+menu, where the thumb buttons can be resized (small/medium/large, remembered in
+`localStorage`); the buttons stay visible behind the menu so the new size is
+previewed on the real thing.
 
 ## How it works
 
@@ -34,10 +40,6 @@ npm run dev      # http://localhost:5173
 - **Mass is the difficulty.** A water glass skitters off with one swipe; a
   monitor has to be walked to the edge over many. Heavy items are worth far
   more, so the greedy play is also the slow, exposed one.
-- **Eye contact is the gamble.** Staring roots you in place and fills the
-  owner's anger faster — but anything that hits the floor while you're staring
-  scores at up to triple. The intended play is to get something teetering, then
-  turn and stare while it goes over.
 - **Combos** chain knock-offs within ~4 seconds for an extra multiplier.
 - **The owner escalates.** A spray bottle locks onto where you are and fires
   after a beat; a hand sweeps in to grab you — or to rescue whatever you have

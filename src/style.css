@@ -29,3 +29,189 @@ body {
   cursor: none;
   image-rendering: auto;
 }
+
+/* On-screen thumb controls. Hidden until a touchscreen is detected, so a
+   desktop player never sees them. */
+.touch-controls[hidden],
+.tc-button[hidden],
+.tc-scrim[hidden],
+.tc-card[hidden] {
+  display: none;
+}
+
+.touch-controls {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* Set from the pause menu; scales every pad button. */
+  --tc-scale: 1;
+}
+
+.tc-pad {
+  position: absolute;
+  inset: auto 0 0 0;
+  /* Above the scrim, so the menu's size options preview on the real buttons. */
+  z-index: 2;
+  /* Clear of a notch, a home indicator, or a rounded corner. */
+  padding: 0 max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-right));
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+/* While the menu is open the pad is a preview, not a control. */
+.touch-controls.is-menu-open .tc-pad {
+  pointer-events: none;
+}
+
+.tc-button {
+  /* Comfortably past the 44px minimum touch target even at the smallest size. */
+  width: calc(74px * var(--tc-scale));
+  height: calc(74px * var(--tc-scale));
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #f4eefb;
+  font-family: inherit;
+  font-size: calc(26px * var(--tc-scale));
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  /* The smash payoff happens along the bottom of the scene, so these sit
+     quietly over it until a thumb is actually on one. */
+  opacity: 0.55;
+  transition: opacity 90ms ease, background-color 90ms ease, transform 90ms ease;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tc-button.is-held {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(0.94);
+}
+
+/* Movement under the left thumb, the paw under the right. */
+.tc-swipe {
+  margin-left: auto;
+  width: calc(88px * var(--tc-scale));
+  height: calc(88px * var(--tc-scale));
+  font-size: calc(34px * var(--tc-scale));
+  background: rgba(142, 242, 166, 0.18);
+  border-color: rgba(142, 242, 166, 0.45);
+}
+
+.tc-swipe.is-held {
+  background: rgba(142, 242, 166, 0.36);
+}
+
+/* Top-centre, small and quiet — a deliberate press, not a thumb-rest target.
+   Deliberately unscaled: shrinking the pad must never put the way back into
+   the menu out of reach. These rules follow .tc-button so the held transform
+   keeps the centring. */
+.tc-menu-button {
+  position: absolute;
+  z-index: 2;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 46px;
+  font-size: 20px;
+  opacity: 0.4;
+}
+
+.tc-menu-button.is-held {
+  transform: translateX(-50%) scale(0.94);
+}
+
+/* ---------------------------------------------------------- pause menu */
+
+.tc-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(10, 7, 15, 0.8);
+  pointer-events: auto;
+}
+
+.tc-card {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(320px, calc(100vw - 48px));
+  padding: 18px 20px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  background: #191324;
+  color: #f4eefb;
+  text-align: center;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tc-card-title {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.tc-card-label {
+  margin-top: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #9d92b0;
+}
+
+.tc-size-options {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.tc-size {
+  flex: 1;
+  padding: 12px 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #f4eefb;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tc-size[aria-pressed='true'] {
+  background: rgba(142, 242, 166, 0.22);
+  border-color: rgba(142, 242, 166, 0.55);
+  color: #8ef2a6;
+}
+
+.tc-card-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #9d92b0;
+}
+
+.tc-resume {
+  margin-top: 18px;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #8ef2a6;
+  color: #10131a;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}

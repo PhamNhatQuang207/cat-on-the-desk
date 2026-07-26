@@ -7,15 +7,24 @@
 import { VIEW } from '../game/config.ts';
 import { pawPosition } from '../game/entities/cat.ts';
 import { riskLevel } from '../game/systems/physics.ts';
-import { stareMultiplier } from '../game/systems/scoring.ts';
 import type { GameState } from '../game/types.ts';
 import type { Ctx } from './draw.ts';
 import { drawHud } from './hud.ts';
 import { drawGameOver, drawPaused, drawTitle } from './overlays.ts';
 import { drawDebris, drawDesk, drawFloaters, drawRoom, drawShards, drawThreats } from './scene.ts';
-import { drawCat, drawEyeContact, drawItem, drawOwner } from './sprites.ts';
+import { drawCat, drawItem, drawOwner } from './sprites.ts';
 
-export function render(ctx: Ctx, state: GameState, canvas: HTMLCanvasElement): void {
+export interface RenderOptions {
+  /** Set when the touch pause menu is drawing its own, richer paused screen. */
+  hidePausedOverlay?: boolean;
+}
+
+export function render(
+  ctx: Ctx,
+  state: GameState,
+  canvas: HTMLCanvasElement,
+  options: RenderOptions = {},
+): void {
   const scale = Math.min(canvas.width / VIEW.width, canvas.height / VIEW.height);
   const offsetX = (canvas.width - VIEW.width * scale) / 2;
   const offsetY = (canvas.height - VIEW.height * scale) / 2;
@@ -44,8 +53,8 @@ export function render(ctx: Ctx, state: GameState, canvas: HTMLCanvasElement): v
 
   if (state.phase !== 'title') drawHud(ctx, state);
 
-  if (state.phase === 'title') drawTitle(ctx);
-  else if (state.phase === 'paused') drawPaused(ctx);
+  if (state.phase === 'title') drawTitle(ctx, state);
+  else if (state.phase === 'paused' && !options.hidePausedOverlay) drawPaused(ctx);
   else if (state.phase === 'gameover') drawGameOver(ctx, state);
 
   ctx.restore();
@@ -57,11 +66,6 @@ function drawWorld(ctx: Ctx, state: GameState): void {
   drawOwner(ctx, state.owner, state.elapsed);
   drawDesk(ctx);
   drawDebris(ctx, state.destroyed);
-
-  if (state.cat.staring) {
-    const strength = (stareMultiplier(state.cat.stareTime, true) - 1) / 2;
-    drawEyeContact(ctx, state.cat, strength);
-  }
 
   for (const item of state.items) {
     drawItem(ctx, item, riskLevel(item));

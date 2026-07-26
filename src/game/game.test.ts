@@ -1,13 +1,13 @@
 /**
  * End-to-end tests over the real update step. These drive `updateGame` with a
  * scripted input source, so they exercise the same code path the browser does
- * — including the parts (holding a key, holding a stare) that are impractical
- * to drive through browser automation.
+ * — including the parts (holding a key down) that are impractical to drive
+ * through browser automation.
  */
 
 import { describe, expect, it } from 'vitest';
 import type { Action, InputSource } from '../engine/input.ts';
-import { CAT, DESK, OWNER } from './config.ts';
+import { CAT, CAT_BREED_ORDER, DESK, OWNER } from './config.ts';
 import { createItem } from './entities/item.ts';
 import { updateGame } from './game.ts';
 import { createGameState } from './state.ts';
@@ -130,6 +130,65 @@ describe('phase transitions', () => {
   });
 });
 
+describe('cat selection', () => {
+  it('cycles breeds on the title screen with left/right, wrapping at the ends', () => {
+    const state = createGameState();
+    const input = new FakeInput();
+    expect(state.selectedBreed).toBe(CAT_BREED_ORDER[0]);
+
+    input.tap('right');
+    updateGame(state, input, STEP);
+    expect(state.selectedBreed).toBe(CAT_BREED_ORDER[1]);
+
+    input.tap('left');
+    updateGame(state, input, STEP);
+    expect(state.selectedBreed).toBe(CAT_BREED_ORDER[0]);
+
+    // Wraps to the last breed going left from the first.
+    input.tap('left');
+    updateGame(state, input, STEP);
+    expect(state.selectedBreed).toBe(CAT_BREED_ORDER[CAT_BREED_ORDER.length - 1]);
+  });
+
+  it('starts a run with the breed selected on the title screen', () => {
+    const state = createGameState();
+    const input = new FakeInput();
+
+    input.tap('right');
+    updateGame(state, input, STEP);
+    input.tap('right');
+    updateGame(state, input, STEP);
+    expect(state.selectedBreed).toBe(CAT_BREED_ORDER[2]);
+
+    input.tap('swipe');
+    updateGame(state, input, STEP);
+    expect(state.phase).toBe('playing');
+    expect(state.cat.breed).toBe(CAT_BREED_ORDER[2]);
+  });
+
+  it('lets the player switch breeds again from the game-over screen', () => {
+    const state = createGameState();
+    const input = new FakeInput();
+    input.tap('swipe');
+    updateGame(state, input, STEP);
+    state.strikes = OWNER.maxStrikes;
+    updateGame(state, input, STEP);
+    expect(state.phase).toBe('gameover');
+    const initialBreed = state.selectedBreed;
+
+    input.tap('right');
+    updateGame(state, input, STEP);
+    const newBreed = CAT_BREED_ORDER[(CAT_BREED_ORDER.indexOf(initialBreed) + 1) % CAT_BREED_ORDER.length];
+    expect(state.selectedBreed).toBe(newBreed);
+    expect(state.phase).toBe('gameover');
+
+    input.tap('swipe');
+    updateGame(state, input, STEP);
+    expect(state.phase).toBe('playing');
+    expect(state.cat.breed).toBe(newBreed);
+  });
+});
+
 describe('movement', () => {
   it('walks left while the key is held and stops at the desk edge', () => {
     const { state, input } = startedGame();
@@ -147,17 +206,6 @@ describe('movement', () => {
 
     expect(state.cat.facing).toBe(1);
     expect(state.cat.x).toBeCloseTo(CAT.maxX, 0);
-  });
-
-  it('is frozen in place while holding eye contact', () => {
-    const { state, input } = startedGame();
-    const startX = state.cat.x;
-    input.hold('stare');
-    input.hold('left');
-    run(state, input, 1);
-
-    expect(state.cat.staring).toBe(true);
-    expect(state.cat.x).toBe(startX);
   });
 });
 
@@ -227,29 +275,6 @@ describe('the core loop: swipe an item off the desk', () => {
     };
 
     expect(swipesToDestroy('monitor')).toBeGreaterThan(swipesToDestroy('glass'));
-  });
-
-  it('awards more for the same item when destroyed under eye contact', () => {
-    const scoreFor = (staring: boolean): number => {
-      const { state, input } = startedGame();
-      const item = onlyItem(state, 'mug', DESK.edgeX + 4);
-      if (staring) {
-        // Establish the stare and let it ramp *before* the item goes over —
-        // the multiplier that counts is the one held when it smashes.
-        input.hold('stare');
-        run(state, input, 2.5);
-      }
-      // Give it just enough shove to go over on its own.
-      item.vx = -80;
-      run(state, input, 1.5);
-      expect(state.destroyed).toBe(1);
-      return state.score;
-    };
-
-    const plain = scoreFor(false);
-    const stared = scoreFor(true);
-    expect(stared).toBeGreaterThan(plain);
-    expect(stared / plain).toBeCloseTo(3, 1);
   });
 
   it('builds a combo across consecutive knock-offs', () => {

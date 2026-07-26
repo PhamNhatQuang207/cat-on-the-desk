@@ -1,4 +1,4 @@
-import type { ItemKind } from './config.ts';
+import type { CatBreed, ItemKind } from './config.ts';
 
 export type Phase = 'title' | 'playing' | 'paused' | 'gameover';
 
@@ -30,6 +30,7 @@ export interface Item {
 }
 
 export interface Cat {
+  breed: CatBreed;
   x: number;
   facing: -1 | 1;
   /** Counts down while a swipe animation plays. */
@@ -37,8 +38,6 @@ export interface Cat {
   swipeCooldown: number;
   /** True once this swipe's contact frame has been resolved. */
   swipeConnected: boolean;
-  staring: boolean;
-  stareTime: number;
   stunTimer: number;
   /** Walk-cycle phase, cosmetic. */
   bob: number;
@@ -93,8 +92,6 @@ export interface Owner {
   nextThreatIn: number;
   /** Cosmetic: eased toward aggro so the face doesn't snap between moods. */
   displayAnger: number;
-  /** True while the cat is holding eye contact — owner stares back. */
-  lockedEyes: boolean;
 }
 
 export interface GameState {
@@ -103,6 +100,8 @@ export interface GameState {
   score: number;
   highScore: number;
   strikes: number;
+  /** Persisted across runs — the breed chosen on the title screen. */
+  selectedBreed: CatBreed;
 
   cat: Cat;
   owner: Owner;
