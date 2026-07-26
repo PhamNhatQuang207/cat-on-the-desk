@@ -2,7 +2,6 @@ import { initAudio } from './engine/audio.ts';
 import { Input } from './engine/input.ts';
 import { startLoop } from './engine/loop.ts';
 import { mountTouchControls } from './engine/touch.ts';
-import { VIEW } from './game/config.ts';
 import { updateGame } from './game/game.ts';
 import { createGameState } from './game/state.ts';
 import { render } from './render/renderer.ts';
@@ -13,17 +12,18 @@ if (!canvas) throw new Error('#game canvas not found');
 const ctx = canvas.getContext('2d');
 if (!ctx) throw new Error('2D canvas context unavailable');
 
-/** Sizes the backing store to the window, keeping the 16:9 play area. */
+/**
+ * Fills the window. The renderer still fits the whole 16:9 play area on screen
+ * and centres it, so nothing is cropped — it just paints room into whatever
+ * the display's shape leaves over, rather than letterboxing.
+ */
 function resize(): void {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const aspect = VIEW.width / VIEW.height;
-  let cssWidth = window.innerWidth;
-  let cssHeight = window.innerHeight;
-  if (cssWidth / cssHeight > aspect) cssWidth = cssHeight * aspect;
-  else cssHeight = cssWidth / aspect;
+  const cssWidth = window.innerWidth;
+  const cssHeight = window.innerHeight;
 
-  canvas!.style.width = `${Math.floor(cssWidth)}px`;
-  canvas!.style.height = `${Math.floor(cssHeight)}px`;
+  canvas!.style.width = `${cssWidth}px`;
+  canvas!.style.height = `${cssHeight}px`;
   canvas!.width = Math.floor(cssWidth * dpr);
   canvas!.height = Math.floor(cssHeight * dpr);
 }

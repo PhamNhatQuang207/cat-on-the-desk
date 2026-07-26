@@ -1,15 +1,16 @@
 import { CAT, CAT_BREED_ORDER, CAT_BREEDS, COLORS, DESK, VIEW } from '../game/config.ts';
 import type { Cat, GameState } from '../game/types.ts';
-import { text, type Ctx } from './draw.ts';
+import { text, type Ctx, type ViewBounds } from './draw.ts';
 import { drawCat, keyCap } from './sprites.ts';
 
-function scrim(ctx: Ctx, alpha: number): void {
+/** Covers the whole display, which is wider than the play area off 16:9. */
+function scrim(ctx: Ctx, alpha: number, bounds: ViewBounds): void {
   ctx.fillStyle = `rgba(10, 7, 15, ${alpha})`;
-  ctx.fillRect(0, 0, VIEW.width, VIEW.height);
+  ctx.fillRect(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
 }
 
-export function drawTitle(ctx: Ctx, state: GameState): void {
-  scrim(ctx, 0.72);
+export function drawTitle(ctx: Ctx, state: GameState, bounds: ViewBounds): void {
+  scrim(ctx, 0.72, bounds);
   const cx = VIEW.width / 2;
 
   text(ctx, 'CAT ON A DESK', cx, 88, { size: 46, color: COLORS.text, align: 'center', weight: '900' });
@@ -68,15 +69,15 @@ function drawControls(ctx: Ctx, y: number): void {
   });
 }
 
-export function drawPaused(ctx: Ctx): void {
-  scrim(ctx, 0.6);
+export function drawPaused(ctx: Ctx, bounds: ViewBounds): void {
+  scrim(ctx, 0.6, bounds);
   const cx = VIEW.width / 2;
   text(ctx, 'PAUSED', cx, VIEW.height / 2 - 10, { size: 52, color: COLORS.text, align: 'center', weight: '900' });
   text(ctx, 'Press P or tap to resume', cx, VIEW.height / 2 + 30, { size: 20, color: COLORS.dim, align: 'center' });
 }
 
-export function drawGameOver(ctx: Ctx, state: GameState): void {
-  scrim(ctx, 0.78);
+export function drawGameOver(ctx: Ctx, state: GameState, bounds: ViewBounds): void {
+  scrim(ctx, 0.78, bounds);
   const cx = VIEW.width / 2;
   const isBest = state.score >= state.highScore && state.score > 0;
 

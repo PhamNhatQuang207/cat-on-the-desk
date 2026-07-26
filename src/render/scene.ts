@@ -2,18 +2,28 @@
 
 import { COLORS, DESK, PHYSICS, THREAT, VIEW } from '../game/config.ts';
 import type { GameState, Threat } from '../game/types.ts';
-import { ellipse, fillRoundRect, text, type Ctx } from './draw.ts';
+import { ellipse, fillRoundRect, text, type Ctx, type ViewBounds } from './draw.ts';
 
-export function drawRoom(ctx: Ctx): void {
+/** Overdraw past the visible edges so screen shake cannot expose a gap. */
+const BLEED = 48;
+
+export function drawRoom(ctx: Ctx, bounds: ViewBounds): void {
+  const left = bounds.left - BLEED;
+  const top = bounds.top - BLEED;
+  const width = bounds.right - bounds.left + BLEED * 2;
+  const height = bounds.bottom - bounds.top + BLEED * 2;
+
+  // The gradient stays keyed to the play area so the wall shades the same way
+  // at any aspect; canvas clamps it past both ends, which is what we want.
   const wall = ctx.createLinearGradient(0, 0, 0, VIEW.height);
   wall.addColorStop(0, COLORS.wallTop);
   wall.addColorStop(1, COLORS.wallBottom);
   ctx.fillStyle = wall;
-  ctx.fillRect(0, 0, VIEW.width, VIEW.height);
+  ctx.fillRect(left, top, width, height);
 
   // Floor beyond the desk edge — the abyss things fall into.
   ctx.fillStyle = COLORS.floor;
-  ctx.fillRect(0, DESK.surfaceY + 150, VIEW.width, VIEW.height);
+  ctx.fillRect(left, PHYSICS.floorY, width, bounds.bottom + BLEED - PHYSICS.floorY);
 
   // A framed picture, because every desk sits under one.
   fillRoundRect(ctx, 300, 60, 120, 84, 6, '#3b3049');

@@ -2,6 +2,21 @@
 
 export type Ctx = CanvasRenderingContext2D;
 
+/**
+ * The visible area in virtual units.
+ *
+ * Always contains the fixed 960x540 play area, and is larger than it on any
+ * screen whose aspect is not 16:9 — the surplus is filled with more room so
+ * the game reaches the edges of the display instead of letterboxing. Gameplay
+ * still lives entirely inside VIEW, so nothing outside it can matter.
+ */
+export interface ViewBounds {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
 export function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, r: number): void {
   const radius = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
   ctx.beginPath();
