@@ -46,6 +46,48 @@ const SIZE_OPTIONS: Array<{ id: ControlSize; label: string }> = [
 
 const SIZE_KEY = 'cat-on-the-desk.control-size';
 
+// ------------------------------------------------------------- zoom guard
+
+/** How close two taps have to be for the browser to read them as a double-tap. */
+const DOUBLE_TAP_MS = 350;
+
+/**
+ * Cancels the browser gestures that rescale the viewport.
+ *
+ * A zoom is unrecoverable here: the canvas and the controls slide off screen
+ * with nothing to scroll back with, so one stray double-tap ends the run. The
+ * `user-scalable=no` viewport tag and `touch-action: none` between them cover
+ * Chrome and Firefox, but iOS Safari ignores the former outright and does not
+ * reliably honour the latter for double-tap zoom — so the gestures are
+ * cancelled here directly rather than declared away in CSS.
+ *
+ * Mashing the paw button is the whole game, so there is no legitimate
+ * double-tap to preserve. Cancelling the default does not touch the pointer
+ * events the controls actually run on; it only stops the browser's own gesture.
+ */
+function blockViewportZoom(): void {
+  let lastTouchStart = 0;
+  document.addEventListener(
+    'touchstart',
+    (e) => {
+      // A second finger would start a pinch, a quick second tap a double-tap.
+      if (e.touches.length > 1 || e.timeStamp - lastTouchStart < DOUBLE_TAP_MS) {
+        e.preventDefault();
+      }
+      lastTouchStart = e.timeStamp;
+    },
+    { passive: false },
+  );
+
+  // Safari's own pinch events, which `touch-action` does not cover at all.
+  for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {
+    document.addEventListener(type, (e) => e.preventDefault());
+  }
+
+  // Belt and braces for the synthesised double-click behind a double-tap.
+  document.addEventListener('dblclick', (e) => e.preventDefault());
+}
+
 function loadControlSize(): ControlSize {
   try {
     const raw = localStorage.getItem(SIZE_KEY);
@@ -80,6 +122,10 @@ export interface TouchControls {
  * the overlay stays hidden until something proves the device has a touchscreen.
  */
 export function mountTouchControls(input: Input, canvas: HTMLCanvasElement): TouchControls {
+  // Installed unconditionally: a touch device that has not been detected yet
+  // can still be zoomed, and on a mouse these listeners simply never fire.
+  blockViewportZoom();
+
   const root = document.createElement('div');
   root.className = 'touch-controls';
   root.hidden = true;

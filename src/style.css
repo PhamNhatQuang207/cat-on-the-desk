@@ -28,6 +28,9 @@ body {
   max-height: 100%;
   cursor: none;
   image-rendering: auto;
+  /* `touch-action` does not inherit, so the canvas needs its own copy of the
+     body's rule — most taps land here rather than on a button. */
+  touch-action: none;
 }
 
 /* On-screen thumb controls. Hidden until a touchscreen is detected, so a
@@ -43,8 +46,15 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
+  touch-action: none;
   /* Set from the pause menu; scales every pad button. */
   --tc-scale: 1;
+}
+
+.tc-pad,
+.tc-scrim,
+.tc-card {
+  touch-action: none;
 }
 
 .tc-pad {
