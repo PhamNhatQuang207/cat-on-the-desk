@@ -120,7 +120,9 @@ export const CAT_BREEDS: Record<CatBreed, CatBreedSpec> = {
     name: 'Black Cat',
     tagline: 'Bad luck, for the owner.',
     fur: '#2e2a35',
-    furDark: '#1c1922',
+    /* Matches the body rather than shading below it: anything darker than the
+       coat disappears into the wall behind the desk. */
+    furDark: '#2e2a35',
     pattern: 'solid',
     patternColor: '#1c1922',
     eye: '#f2d68e',
