@@ -32,6 +32,11 @@ menu, where the thumb buttons can be resized (small/medium/large, remembered in
 `localStorage`); the buttons stay visible behind the menu so the new size is
 previewed on the real thing.
 
+The desk needs the width, so a phone held upright gets a rotate prompt and the
+run freezes until it is turned back — it stays paused afterwards rather than
+dropping you back mid-spray. A tall *desktop* window is left alone; it only
+applies to touch devices.
+
 ## How it works
 
 - **Two doom edges.** The desk drops off on the left *and* the right. Items

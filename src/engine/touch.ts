@@ -46,6 +46,48 @@ const SIZE_OPTIONS: Array<{ id: ControlSize; label: string }> = [
 
 const SIZE_KEY = 'cat-on-the-desk.control-size';
 
+// ------------------------------------------------------------- zoom guard
+
+/** How close two taps have to be for the browser to read them as a double-tap. */
+const DOUBLE_TAP_MS = 350;
+
+/**
+ * Cancels the browser gestures that rescale the viewport.
+ *
+ * A zoom is unrecoverable here: the canvas and the controls slide off screen
+ * with nothing to scroll back with, so one stray double-tap ends the run. The
+ * `user-scalable=no` viewport tag and `touch-action: none` between them cover
+ * Chrome and Firefox, but iOS Safari ignores the former outright and does not
+ * reliably honour the latter for double-tap zoom — so the gestures are
+ * cancelled here directly rather than declared away in CSS.
+ *
+ * Mashing the paw button is the whole game, so there is no legitimate
+ * double-tap to preserve. Cancelling the default does not touch the pointer
+ * events the controls actually run on; it only stops the browser's own gesture.
+ */
+function blockViewportZoom(): void {
+  let lastTouchStart = 0;
+  document.addEventListener(
+    'touchstart',
+    (e) => {
+      // A second finger would start a pinch, a quick second tap a double-tap.
+      if (e.touches.length > 1 || e.timeStamp - lastTouchStart < DOUBLE_TAP_MS) {
+        e.preventDefault();
+      }
+      lastTouchStart = e.timeStamp;
+    },
+    { passive: false },
+  );
+
+  // Safari's own pinch events, which `touch-action` does not cover at all.
+  for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {
+    document.addEventListener(type, (e) => e.preventDefault());
+  }
+
+  // Belt and braces for the synthesised double-click behind a double-tap.
+  document.addEventListener('dblclick', (e) => e.preventDefault());
+}
+
 function loadControlSize(): ControlSize {
   try {
     const raw = localStorage.getItem(SIZE_KEY);
@@ -73,6 +115,11 @@ export interface TouchControls {
   setPhase(phase: TouchPhase): void;
   /** True once the overlay is showing, i.e. this is a touch device. */
   isActive(): boolean;
+  /**
+   * True while the device is held in an orientation the game cannot use, so
+   * the caller can freeze the run behind the rotate prompt.
+   */
+  isBlocked(): boolean;
 }
 
 /**
@@ -80,6 +127,10 @@ export interface TouchControls {
  * the overlay stays hidden until something proves the device has a touchscreen.
  */
 export function mountTouchControls(input: Input, canvas: HTMLCanvasElement): TouchControls {
+  // Installed unconditionally: a touch device that has not been detected yet
+  // can still be zoomed, and on a mouse these listeners simply never fire.
+  blockViewportZoom();
+
   const root = document.createElement('div');
   root.className = 'touch-controls';
   root.hidden = true;
@@ -124,7 +175,21 @@ export function mountTouchControls(input: Input, canvas: HTMLCanvasElement): Tou
   });
   root.appendChild(card);
 
+  // Covers everything else, including the menu, so it is the only thing a
+  // sideways player can see or touch.
+  const rotate = buildRotatePrompt();
+  root.appendChild(rotate);
+
   document.body.appendChild(root);
+
+  // The desk is a 16:9 scene with the doom edges at the far left and right;
+  // squeezed into portrait it is a letterboxed sliver with nothing playable.
+  const portrait = window.matchMedia('(orientation: portrait)');
+  const syncOrientation = (): void => {
+    rotate.hidden = !portrait.matches;
+  };
+  syncOrientation();
+  portrait.addEventListener('change', syncOrientation);
 
   // Tapping the play area swipes too, so the paw is reachable without hunting
   // for the button. A wasted swipe costs nothing, so a stray tap is harmless.
@@ -160,7 +225,40 @@ export function mountTouchControls(input: Input, canvas: HTMLCanvasElement): Tou
     isActive() {
       return active;
     },
+    isBlocked() {
+      // Only a touch device gets held sideways; a tall desktop window is just
+      // a tall window, and the player still has a keyboard.
+      return active && portrait.matches;
+    },
   };
+}
+
+function buildRotatePrompt(): HTMLElement {
+  const el = document.createElement('div');
+  el.className = 'tc-rotate';
+  el.hidden = true;
+  // Without this the window-level tap-to-confirm would resume, behind a screen
+  // the player cannot see past.
+  el.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  const phone = document.createElement('div');
+  phone.className = 'tc-rotate-phone';
+  el.appendChild(phone);
+
+  const title = document.createElement('p');
+  title.className = 'tc-rotate-title';
+  title.textContent = 'Rotate your device';
+  el.appendChild(title);
+
+  const hint = document.createElement('p');
+  hint.className = 'tc-rotate-hint';
+  hint.textContent = 'The desk needs a landscape screen.';
+  el.appendChild(hint);
+
+  return el;
 }
 
 /** Fires an action as a single press, the way tapping a key reads. */
