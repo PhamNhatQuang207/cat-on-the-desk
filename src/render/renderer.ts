@@ -8,7 +8,7 @@ import { VIEW } from '../game/config.ts';
 import { pawPosition } from '../game/entities/cat.ts';
 import { riskLevel } from '../game/systems/physics.ts';
 import type { GameState } from '../game/types.ts';
-import type { Ctx } from './draw.ts';
+import type { Ctx, ViewBounds } from './draw.ts';
 import { drawHud } from './hud.ts';
 import { drawGameOver, drawPaused, drawTitle } from './overlays.ts';
 import { drawDebris, drawDesk, drawFloaters, drawRoom, drawShards, drawThreats } from './scene.ts';
@@ -25,9 +25,18 @@ export function render(
   canvas: HTMLCanvasElement,
   options: RenderOptions = {},
 ): void {
+  // Fit the whole play area on screen — never crop it, since the doom edges at
+  // the far left and right are the game. Whatever the shape of the display
+  // leaves over becomes extra room rather than black bars.
   const scale = Math.min(canvas.width / VIEW.width, canvas.height / VIEW.height);
   const offsetX = (canvas.width - VIEW.width * scale) / 2;
   const offsetY = (canvas.height - VIEW.height * scale) / 2;
+  const bounds: ViewBounds = {
+    left: -offsetX / scale,
+    top: -offsetY / scale,
+    right: VIEW.width + offsetX / scale,
+    bottom: VIEW.height + offsetY / scale,
+  };
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#0d0a10';
@@ -42,27 +51,21 @@ export function render(
   const shakeY = state.shake > 0 ? (Math.random() - 0.5) * state.shake : 0;
 
   ctx.save();
-  ctx.beginPath();
-  ctx.rect(0, 0, VIEW.width, VIEW.height);
-  ctx.clip();
-
-  ctx.save();
   ctx.translate(shakeX, shakeY);
-  drawWorld(ctx, state);
+  drawWorld(ctx, state, bounds);
   ctx.restore();
 
   if (state.phase !== 'title') drawHud(ctx, state);
 
-  if (state.phase === 'title') drawTitle(ctx, state);
-  else if (state.phase === 'paused' && !options.hidePausedOverlay) drawPaused(ctx);
-  else if (state.phase === 'gameover') drawGameOver(ctx, state);
+  if (state.phase === 'title') drawTitle(ctx, state, bounds);
+  else if (state.phase === 'paused' && !options.hidePausedOverlay) drawPaused(ctx, bounds);
+  else if (state.phase === 'gameover') drawGameOver(ctx, state, bounds);
 
-  ctx.restore();
   ctx.restore();
 }
 
-function drawWorld(ctx: Ctx, state: GameState): void {
-  drawRoom(ctx);
+function drawWorld(ctx: Ctx, state: GameState, bounds: ViewBounds): void {
+  drawRoom(ctx, bounds);
   drawOwner(ctx, state.owner, state.elapsed);
   drawDesk(ctx);
   drawDebris(ctx, state.destroyed);
@@ -78,6 +81,13 @@ function drawWorld(ctx: Ctx, state: GameState): void {
   drawShards(ctx, state);
   drawFloaters(ctx, state);
 
+  // Full-screen tints have to cover the widened room, not just the play area,
+  // or they stop short in a visible band.
+  const x = bounds.left;
+  const y = bounds.top;
+  const w = bounds.right - bounds.left;
+  const h = bounds.bottom - bounds.top;
+
   // A red vignette when the owner is about to lose it.
   if (state.owner.aggro > 0.65) {
     const intensity = (state.owner.aggro - 0.65) / 0.35;
@@ -92,11 +102,11 @@ function drawWorld(ctx: Ctx, state: GameState): void {
     vignette.addColorStop(0, 'rgba(255,0,40,0)');
     vignette.addColorStop(1, `rgba(255,0,40,${0.35 * intensity})`);
     ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, VIEW.width, VIEW.height);
+    ctx.fillRect(x, y, w, h);
   }
 
   if (state.flash > 0) {
     ctx.fillStyle = `rgba(255,255,255,${state.flash * 0.12})`;
-    ctx.fillRect(0, 0, VIEW.width, VIEW.height);
+    ctx.fillRect(x, y, w, h);
   }
 }
