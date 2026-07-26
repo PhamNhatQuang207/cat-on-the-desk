@@ -7,7 +7,7 @@ An endless arcade browser game. The desk drops away on **both** sides — shove
 everything off whichever edge is closer, and dodge the spray bottle for as
 long as you can manage.
 
-▶ **Play it live:** https://phamnhatquang207.github.io/cat-on-the-desk/
+▶ **Play it live:** https://catonthedesk.is-a.dev
 
 ## Play
 
