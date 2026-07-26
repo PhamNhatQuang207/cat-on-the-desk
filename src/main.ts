@@ -38,7 +38,14 @@ input.onFirstGesture = () => initAudio();
 const touchControls = mountTouchControls(input, canvas);
 
 startLoop({
-  update: (dt) => updateGame(state, input, dt),
+  update: (dt) => {
+    // A sideways phone cannot show the desk, so freeze the run rather than let
+    // the owner keep swinging at a player who cannot see or reach anything.
+    // It stays paused after rotating back — landing straight into a spray you
+    // never saw coming would be a worse surprise.
+    if (touchControls.isBlocked() && state.phase === 'playing') state.phase = 'paused';
+    updateGame(state, input, dt);
+  },
   render: () => {
     // Keeping the phase mapping here leaves `engine/` free of game concepts.
     touchControls.setPhase(

@@ -38,7 +38,8 @@ body {
 .touch-controls[hidden],
 .tc-button[hidden],
 .tc-scrim[hidden],
-.tc-card[hidden] {
+.tc-card[hidden],
+.tc-rotate[hidden] {
   display: none;
 }
 
@@ -224,4 +225,60 @@ body {
   font-weight: 800;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ------------------------------------------------------- rotate prompt */
+
+/* Opaque and top of the stack: the only thing a sideways player can see. */
+.tc-rotate {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  padding: 24px;
+  background: #0d0a10;
+  color: #f4eefb;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.tc-rotate-phone {
+  width: 52px;
+  height: 84px;
+  margin-bottom: 22px;
+  border: 3px solid rgba(244, 238, 251, 0.85);
+  border-radius: 11px;
+  animation: tc-tip 2s ease-in-out infinite;
+}
+
+@keyframes tc-tip {
+  0%,
+  35% {
+    transform: rotate(0deg);
+  }
+  65%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-rotate-phone {
+    animation: none;
+    transform: rotate(-90deg);
+  }
+}
+
+.tc-rotate-title {
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.tc-rotate-hint {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #9d92b0;
 }

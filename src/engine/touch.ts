@@ -115,6 +115,11 @@ export interface TouchControls {
   setPhase(phase: TouchPhase): void;
   /** True once the overlay is showing, i.e. this is a touch device. */
   isActive(): boolean;
+  /**
+   * True while the device is held in an orientation the game cannot use, so
+   * the caller can freeze the run behind the rotate prompt.
+   */
+  isBlocked(): boolean;
 }
 
 /**
@@ -170,7 +175,21 @@ export function mountTouchControls(input: Input, canvas: HTMLCanvasElement): Tou
   });
   root.appendChild(card);
 
+  // Covers everything else, including the menu, so it is the only thing a
+  // sideways player can see or touch.
+  const rotate = buildRotatePrompt();
+  root.appendChild(rotate);
+
   document.body.appendChild(root);
+
+  // The desk is a 16:9 scene with the doom edges at the far left and right;
+  // squeezed into portrait it is a letterboxed sliver with nothing playable.
+  const portrait = window.matchMedia('(orientation: portrait)');
+  const syncOrientation = (): void => {
+    rotate.hidden = !portrait.matches;
+  };
+  syncOrientation();
+  portrait.addEventListener('change', syncOrientation);
 
   // Tapping the play area swipes too, so the paw is reachable without hunting
   // for the button. A wasted swipe costs nothing, so a stray tap is harmless.
@@ -206,7 +225,40 @@ export function mountTouchControls(input: Input, canvas: HTMLCanvasElement): Tou
     isActive() {
       return active;
     },
+    isBlocked() {
+      // Only a touch device gets held sideways; a tall desktop window is just
+      // a tall window, and the player still has a keyboard.
+      return active && portrait.matches;
+    },
   };
+}
+
+function buildRotatePrompt(): HTMLElement {
+  const el = document.createElement('div');
+  el.className = 'tc-rotate';
+  el.hidden = true;
+  // Without this the window-level tap-to-confirm would resume, behind a screen
+  // the player cannot see past.
+  el.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  const phone = document.createElement('div');
+  phone.className = 'tc-rotate-phone';
+  el.appendChild(phone);
+
+  const title = document.createElement('p');
+  title.className = 'tc-rotate-title';
+  title.textContent = 'Rotate your device';
+  el.appendChild(title);
+
+  const hint = document.createElement('p');
+  hint.className = 'tc-rotate-hint';
+  hint.textContent = 'The desk needs a landscape screen.';
+  el.appendChild(hint);
+
+  return el;
 }
 
 /** Fires an action as a single press, the way tapping a key reads. */
